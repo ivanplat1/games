@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>org.springframework.data</groupId>
+  <artifactId>spring-data-bom</artifactId>
+  <version>2021.2.8-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <timestamp>20230211.155441</timestamp>
+      <buildNumber>287</buildNumber>
+    </snapshot>
+    <lastUpdated>20230211155444</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>2021.2.8-20230211.155441-287</value>
+        <updated>20230211155441</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>

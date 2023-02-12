@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata modelVersion="1.1.0">
+  <groupId>io.projectreactor</groupId>
+  <artifactId>reactor-bom</artifactId>
+  <version>2020.0.28-SNAPSHOT</version>
+  <versioning>
+    <snapshot>
+      <timestamp>20230118.122052</timestamp>
+      <buildNumber>3</buildNumber>
+    </snapshot>
+    <lastUpdated>20230118122054</lastUpdated>
+    <snapshotVersions>
+      <snapshotVersion>
+        <extension>pom</extension>
+        <value>2020.0.28-20230118.122052-3</value>
+        <updated>20230118122052</updated>
+      </snapshotVersion>
+      <snapshotVersion>
+        <extension>module</extension>
+        <value>2020.0.28-20230118.122052-3</value>
+        <updated>20230118122052</updated>
+      </snapshotVersion>
+    </snapshotVersions>
+  </versioning>
+</metadata>
