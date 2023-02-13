@@ -12,7 +12,7 @@ import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.Route;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Route
+
 public class MainView extends VerticalLayout {
 
     private final EmployeeRepository employeeRepository;
@@ -24,7 +24,6 @@ public class MainView extends VerticalLayout {
     private final HorizontalLayout toolbar = new HorizontalLayout(filter, addNewBtn);
 
 
-    @Autowired
     public MainView(EmployeeRepository employeeRepository, EmployeeEditor editor) {
         this.employeeRepository = employeeRepository;
         this.editor = editor;
@@ -35,9 +34,7 @@ public class MainView extends VerticalLayout {
         filter.addValueChangeListener(e -> showEmployee(e.getValue()));
 
         // Connect selected Customer to editor or hide if none is selected
-        grid.asSingleSelect().addValueChangeListener(e -> {
-            editor.editEmployee(e.getValue());
-        });
+        grid.asSingleSelect().addValueChangeListener(e -> editor.editEmployee(e.getValue()));
 
         // Instantiate and edit new Customer the new button is clicked
         addNewBtn.addClickListener(e -> editor.editEmployee(new Employee()));
