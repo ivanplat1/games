@@ -8,7 +8,7 @@ import java.util.Map;
 
 public class Checker extends Figure {
 
-    public Checker(Color color, CellKey initPosition) {
+    public Checker(Color color, Cell initPosition) {
         super(color, FigureType.CHECKER, initPosition);
     }
 

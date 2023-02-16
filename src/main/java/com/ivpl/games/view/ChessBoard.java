@@ -61,17 +61,25 @@ public class ChessBoard extends VerticalLayout {
     }
 
     private Figure addFigure(Map.Entry<CellKey, Cell> cellEntry) {
-        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? Color.BLACK : Color.WHITE, cellEntry.getKey());
+        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? Color.BLACK : Color.WHITE, cellEntry.getValue());
         cellEntry.getValue().setFigure(f);
 
         f.addClickListener(e -> {
-            if (selectedFigure == null) {
-                f.getPossibleSteps().forEach(k -> cells.get(k).getStyle().set("filter", "brightness(0.80)"));
-                f.getStyle().set("filter", "brightness(0.80)");
+            if (f.getPossibleSteps().isEmpty()) return;
+            f.selectUnselectAction(f.equals(selectedFigure));
+            if (!f.equals(selectedFigure)) {
+                if (selectedFigure != null) {
+                    selectedFigure.getPossibleSteps().forEach(k -> cells.get(k).getStyle().remove("filter"));
+                    selectedFigure.selectUnselectAction(true);
+                }
+                f.getPossibleSteps().forEach(k -> {
+                    Cell cell = cells.get(k);
+                    cell.getStyle().set("filter", "brightness(0.80)");
+                    cell.addClickListener(event -> selectedFigure.doStepTo(cell));
+                });
                 selectedFigure = f;
-            } else if (selectedFigure.equals(f)) {
+            } else {
                 f.getPossibleSteps().forEach(k -> cells.get(k).getStyle().remove("filter"));
-                f.getStyle().remove("filter");
                 selectedFigure = null;
             }
         });

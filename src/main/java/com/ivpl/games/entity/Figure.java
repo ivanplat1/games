@@ -23,12 +23,12 @@ public abstract class Figure extends Div implements FigureTemp {
     private Integer _id;
     private final Color color;
     private final FigureType type;
-    private CellKey position;
+    private Cell position;
 
     private Set<CellKey> possibleSteps = new HashSet<>();
     private List<Pair<Integer, Integer>> steps = new LinkedList<>();
 
-    public Figure(Color color, FigureType type, CellKey initPosition) {
+    public Figure(Color color, FigureType type, Cell initPosition) {
         this.color = color;
         this.type = type;
         this.position = initPosition;
@@ -39,8 +39,8 @@ public abstract class Figure extends Div implements FigureTemp {
         possibleSteps.clear();
         Arrays.stream(getDirections()).
                 forEach(a -> {
-                    int x = position.getX() + a[1];
-                    int y = position.getY() + (Color.WHITE.equals(color) ? a[0]*-1 : a[0]);
+                    int x = position.getKey().getX() + a[1];
+                    int y = position.getKey().getY() + (Color.WHITE.equals(color) ? a[0]*-1 : a[0]);
 
                     if (Range.between(1, 8).contains(x) && Range.between(1, 8).contains(y)) {
                         CellKey key = new CellKey(x, y);
@@ -50,8 +50,9 @@ public abstract class Figure extends Div implements FigureTemp {
                 });
     }
 
-    public void doStepTo(Integer targetCellId) {
-
+    public void doStepTo(Cell targetCellKey) {
+        position.remove(this);
+        position = targetCellKey;
     }
 
     private Image getImage() {
@@ -59,4 +60,20 @@ public abstract class Figure extends Div implements FigureTemp {
     }
 
     protected abstract int[][] getDirections();
+
+    private void addSelectedStyle() {
+        getStyle().set("filter", "brightness(0.80)");
+    }
+
+    private void removeSelectedStyle() {
+        getStyle().remove("filter");
+    }
+
+    public void selectUnselectAction(boolean alreadySelected) {
+        if (alreadySelected) {
+            removeSelectedStyle();
+        } else {
+            addSelectedStyle();
+        }
+    }
 }

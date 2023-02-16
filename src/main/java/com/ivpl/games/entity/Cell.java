@@ -2,7 +2,8 @@ package com.ivpl.games.entity;
 
 import com.ivpl.games.constants.Color;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.Label;
+
+import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
 import lombok.NonNull;
 
@@ -13,6 +14,7 @@ public class Cell extends Div {
     private final CellKey key;
     private final Color color;
     private Figure figure = null;
+    private Registration onClickListener;
 
     @NonNull
     public Cell(int x, int y, Color color) {
@@ -28,6 +30,8 @@ public class Cell extends Div {
 
         setHeight("77px");
         setWidth("77px");
+
+
     }
 
     public void setFigure(Figure figure) {
@@ -38,5 +42,12 @@ public class Cell extends Div {
     public void removeFigure() {
         remove(figure);
         this.figure = null;
+    }
+
+    public void addListener() {
+    }
+
+    public void removeListener() {
+        onClickListener.remove();
     }
 }
