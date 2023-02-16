@@ -28,10 +28,6 @@ public class Cell extends Div {
 
         setHeight("77px");
         setWidth("77px");
-
-        Label number = new Label(key.getY() + "" + key.getX());
-        number.getStyle().set("position", "absolute").set("color", "red");
-        add(number);
     }
 
     public void setFigure(Figure figure) {

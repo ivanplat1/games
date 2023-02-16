@@ -9,7 +9,6 @@ import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
-import lombok.NonNull;
 import org.apache.commons.lang3.Range;
 
 import java.util.*;
@@ -19,6 +18,7 @@ import java.util.stream.Collectors;
 @Route
 public class ChessBoard extends VerticalLayout {
 
+    private Figure selectedFigure;
     private Color currentTurn = Color.WHITE;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
     private final List<Figure> figures = new LinkedList<>();
@@ -28,22 +28,13 @@ public class ChessBoard extends VerticalLayout {
         add(printBoard());
         placeFigures();
         recalculatePossibleSteps();
-
-        figures.forEach(e -> add(new Label(
-                        e.getPossibleSteps()
-                        .stream()
-                        .map(k ->(k.getY() + " " + k.getX() + " ")).collect(Collectors.joining()))));
     }
 
     private void placeFigures() {
         figures.addAll(cells.entrySet().stream()
                 .filter(e -> Color.BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
-                .map(e -> {
-                    Figure f = new Checker(e.getKey().getY() < 5 ? Color.BLACK : Color.WHITE, e.getKey());
-                    e.getValue().setFigure(f);
-                    return f;
-                }).collect(Collectors.toList()));
+                .map(this::addFigure).collect(Collectors.toList()));
     }
 
     private VerticalLayout printBoard() {
@@ -67,5 +58,23 @@ public class ChessBoard extends VerticalLayout {
 
     private void recalculatePossibleSteps() {
         figures.forEach(f -> f.calculatePossibleSteps(cells));
+    }
+
+    private Figure addFigure(Map.Entry<CellKey, Cell> cellEntry) {
+        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? Color.BLACK : Color.WHITE, cellEntry.getKey());
+        cellEntry.getValue().setFigure(f);
+
+        f.addClickListener(e -> {
+            if (selectedFigure == null) {
+                f.getPossibleSteps().forEach(k -> cells.get(k).getStyle().set("filter", "brightness(0.80)"));
+                f.getStyle().set("filter", "brightness(0.80)");
+                selectedFigure = f;
+            } else if (selectedFigure.equals(f)) {
+                f.getPossibleSteps().forEach(k -> cells.get(k).getStyle().remove("filter"));
+                f.getStyle().remove("filter");
+                selectedFigure = null;
+            }
+        });
+         return f;
     }
 }
