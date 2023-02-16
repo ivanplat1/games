@@ -1,138 +1,71 @@
 package com.ivpl.games.view;
 
-import com.ivpl.games.components.BoardCell;
-import com.ivpl.games.constants.Constants;
+import com.ivpl.games.constants.Color;
+import com.ivpl.games.entity.Cell;
+import com.ivpl.games.entity.CellKey;
 import com.ivpl.games.entity.Checker;
-import com.vaadin.flow.component.html.Image;
+import com.ivpl.games.entity.Figure;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
+import lombok.NonNull;
+import org.apache.commons.lang3.Range;
 
-import javax.swing.text.html.Option;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Route
 public class ChessBoard extends VerticalLayout {
 
-    private BoardCell selectedCell = null;
-    private final BoardCell[][] cells = new BoardCell[8][8];
+    private Color currentTurn = Color.WHITE;
+    private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
+    private final List<Figure> figures = new LinkedList<>();
 
     public ChessBoard() {
 
-        getStyle().set("background", "");
+        add(printBoard());
+        placeFigures();
+        recalculatePossibleSteps();
 
-        VerticalLayout lines = new VerticalLayout();
-        lines.setSpacing(false);
+        figures.forEach(e -> add(new Label(
+                        e.getPossibleSteps()
+                        .stream()
+                        .map(k ->(k.getY() + " " + k.getX() + " ")).collect(Collectors.joining()))));
+    }
+
+    private void placeFigures() {
+        figures.addAll(cells.entrySet().stream()
+                .filter(e -> Color.BLACK.equals(e.getValue().getColor()))
+                .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
+                .map(e -> {
+                    Figure f = new Checker(e.getKey().getY() < 5 ? Color.BLACK : Color.WHITE, e.getKey());
+                    e.getValue().setFigure(f);
+                    return f;
+                }).collect(Collectors.toList()));
+    }
+
+    private VerticalLayout printBoard() {
+        VerticalLayout board = new VerticalLayout();
+        board.setSpacing(false);
         HorizontalLayout line;
 
-        int count=0;
-
-        for(int x = 0; x < 8; ++x) {
+        for (int y = 1; y < 9; ++y) {
             line = new HorizontalLayout();
             line.setSpacing(false);
-            for(int y = 0; y < 8; ++y) {
 
-                BoardCell newCell = new BoardCell(count, x, y);
-                newCell.addClickListener(e -> {
-
-                    //select cell
-                    if (selectedCell == null && !newCell.isEmpty()) {
-                        selectCell(newCell);
-                    //unselect
-                    } else if (selectedCell != null) {
-                        if (selectedCell.equals(newCell)) {
-                            unselectCell(newCell);
-                        } else if (getPossibleSteps(selectedCell).contains(newCell)) {
-                            doStep(newCell);
-                        }
-                    }
-                });
-
-                cells[x][y] = newCell;
-                line.add(newCell);
-                count++;
+            for(int x = 1; x < 9; ++x) {
+                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? Color.WHITE : Color.BLACK);
+                line.add(cell);
+                cells.put(cell.getKey(), cell);
             }
-            lines.add(line);
+            board.add(line);
         }
-
-        add(lines);
-        placeCheckers();
+        return board;
     }
 
-    private void placeCheckers() {
-
-        for (int i = 5; i < 8; ++i) {
-            for (BoardCell c : cells[i])
-            {
-                if (!c.isWhite()) {
-                    c.createChecker(Constants.CheckerColor.WHITE);
-                }
-            }
-        }
-
-        for (int i = 0; i < 3; ++i) {
-            for (BoardCell c : cells[i])
-            {
-                if (!c.isWhite()) {
-                    c.createChecker(Constants.CheckerColor.BLACK);
-                }
-            }
-        }
-    }
-
-    private void highlightPossibleSteps(BoardCell selectedCell) {
-        getPossibleSteps(selectedCell).forEach(BoardCell::highlight);
-    }
-
-    private void unhighlightPossibleSteps(BoardCell selectedCell) {
-        getPossibleSteps(selectedCell).forEach(BoardCell::unhighlight);
-    }
-
-    private List<BoardCell> getPossibleSteps(BoardCell selectedCell) {
-        List<BoardCell> result = new ArrayList<>();
-        Optional<Checker> checker = Optional.ofNullable(selectedCell.getChecker());
-
-        if (checker.isPresent() && Constants.CheckerColor.BLACK.equals(checker.get().getColor())) {
-            if (selectedCell.getX()+1 > 7) return result;
-
-            for (BoardCell cell : cells[selectedCell.getX()+1]) {
-                if (cell.isEmpty() && (selectedCell.getY() == cell.getY()-1 || selectedCell.getY() == cell.getY()+1)) {
-                    result.add(cell);
-                }
-            }
-        } else {
-            if (selectedCell.getX()-1 < 0) return result;
-
-            for (BoardCell cell : cells[selectedCell.getX()-1]) {
-                if (cell.isEmpty() && (selectedCell.getY() == cell.getY()-1 || selectedCell.getY() == cell.getY()+1)) {
-                    result.add(cell);
-                }
-            }
-        }
-        return result;
-    }
-
-    private void selectCell(BoardCell cell) {
-        cell.highlight();
-        selectedCell = cell;
-        highlightPossibleSteps(cell);
-    }
-
-    private void unselectCell(BoardCell cell) {
-        cell.getStyle().remove("filter");
-        selectedCell = null;
-        unhighlightPossibleSteps(cell);
-    }
-
-    private void doStep(BoardCell cell) {
-        selectedCell.getChildren().findAny().ifPresent(cell::replaceChecker);
-        cell.unhighlight();
-        selectedCell.removeChecker();
-        selectedCell.unhighlight();
-        unhighlightPossibleSteps(selectedCell);
-        selectedCell = null;
+    private void recalculatePossibleSteps() {
+        figures.forEach(f -> f.calculatePossibleSteps(cells));
     }
 }

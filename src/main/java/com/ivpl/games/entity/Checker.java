@@ -1,16 +1,19 @@
 package com.ivpl.games.entity;
 
-import com.ivpl.games.constants.Constants;
-import com.vaadin.flow.component.html.Image;
-import lombok.Getter;
+import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.FigureType;
 
-public class Checker extends Image {
+import java.util.Map;
 
-    @Getter
-    public Constants.CheckerColor color;
 
-    public Checker(Constants.CheckerColor color) {
-        super(Constants.CheckerColor.WHITE.equals(color) ? Constants.WHITE_CHECKER_IMG : Constants.BLACK_CHECKER_IMG, Constants.CheckerColor.WHITE.equals(color) ? "whiteChecker" : "blackChecker");
-        this.color = color;
+public class Checker extends Figure {
+
+    public Checker(Color color, CellKey initPosition) {
+        super(color, FigureType.CHECKER, initPosition);
+    }
+
+    @Override
+    protected int[][] getDirections() {
+        return new int[][] {{1, -1}, {1, 1}};
     }
 }
