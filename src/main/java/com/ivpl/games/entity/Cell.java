@@ -6,6 +6,11 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
 import lombok.NonNull;
+import lombok.Setter;
+
+import java.util.Optional;
+
+import static com.ivpl.games.constants.Constants.*;
 
 
 @Getter
@@ -14,6 +19,7 @@ public class Cell extends Div {
     private final CellKey key;
     private final Color color;
     private Figure figure = null;
+    @Setter
     private Registration onClickListener;
 
     @NonNull
@@ -23,15 +29,13 @@ public class Cell extends Div {
         this.color = color;
 
         if (Color.WHITE.equals(color)) {
-            getStyle().set("background", "#f5f5f5");
+            getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
         } else {
-            getStyle().set("background", "#3f4d62");
+            getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
         }
 
         setHeight("77px");
         setWidth("77px");
-
-
     }
 
     public void setFigure(Figure figure) {
@@ -44,10 +48,13 @@ public class Cell extends Div {
         this.figure = null;
     }
 
-    public void addListener() {
+    public void addSelectedStyle() {
+        getStyle().set("filter", "brightness(0.50)");
     }
 
-    public void removeListener() {
-        onClickListener.remove();
+    public void removeSelectedStyle() {
+        getStyle().remove("filter");
+        Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
     }
+
 }
