@@ -11,6 +11,8 @@ public class Checker extends Figure {
 
     @Override
     protected int[][] getDirections() {
-        return new int[][] {{1, -1}, {1, 1}};
+        return new int[][] {
+                {1, -1}, {1, 1},
+                {-1, 1}, {-1, -1}};
     }
 }

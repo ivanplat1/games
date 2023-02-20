@@ -53,15 +53,19 @@ public abstract class Figure extends Div implements FigureTemp {
                     if (Range.between(1, 8).contains(x) && Range.between(1, 8).contains(y)) {
                         CellKey targetKey = new CellKey(x, y);
                         Cell targetCell = cells.get(targetKey);
-                        if (targetCell.getFigure() != null
-                                && !getColor().equals(targetCell.getFigure().getColor())) {
-                            Optional<Cell> cellBehindTarget = getCellBehindTargetCell(getPosition().getKey(), targetCell.getKey(), cells);
+                        if (targetCell.getFigure() != null) {
+                            if (!getColor().equals(targetCell.getFigure().getColor())) {
+                                Optional<Cell> cellBehindTarget = getCellBehindTargetCell(currentPosition, targetCell.getKey(), cells);
 
-                            if (cellBehindTarget.isPresent() && cellBehindTarget.get().getFigure() == null) {
-                                figureToBeEaten.put(cellBehindTarget.get().getKey(), targetCell.getFigure());
-                                eatingCells.add(cellBehindTarget.get().getKey());
+                                if (cellBehindTarget.isPresent() && cellBehindTarget.get().getFigure() == null) {
+                                    figureToBeEaten.put(cellBehindTarget.get().getKey(), targetCell.getFigure());
+                                    eatingCells.add(cellBehindTarget.get().getKey());
+                                }
                             }
-                        } else {
+                        } else if (Color.WHITE.equals(color)
+                                // revert for blacks
+                                ? currentPosition.getY() > targetKey.getY()
+                                : currentPosition.getY() < targetKey.getY()) {
                             possibleSteps.add(targetKey);
                         }
                     }
@@ -104,6 +108,5 @@ public abstract class Figure extends Div implements FigureTemp {
     public void toDie() {
         position.removeFigure();
         position = null;
-
     }
 }

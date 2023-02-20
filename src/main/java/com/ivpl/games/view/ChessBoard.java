@@ -5,6 +5,8 @@ import com.ivpl.games.entity.Cell;
 import com.ivpl.games.entity.CellKey;
 import com.ivpl.games.entity.Checker;
 import com.ivpl.games.entity.Figure;
+import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
@@ -15,6 +17,7 @@ import org.apache.commons.lang3.Range;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.ivpl.games.constants.Color.BLACK;
 import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
 
@@ -27,15 +30,11 @@ public class ChessBoard extends VerticalLayout {
     private Figure selectedFigure;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
     private final List<Figure> figures = new LinkedList<>();
-    private final VerticalLayout eatenWhites = new VerticalLayout();
-    private final VerticalLayout eatenBlacks = new VerticalLayout();
+    private boolean isAnythingEaten;
 
     public ChessBoard() {
 
-        eatenWhites.setWidth("75px");
-        eatenBlacks.setWidth("75px");
-
-        HorizontalLayout mainLayout = new HorizontalLayout(eatenWhites, printBoard(), eatenBlacks, new VerticalLayout( new Label("Turn: "), addTurnIndicator()));
+        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(), new VerticalLayout( new Label("Turn: "), addTurnIndicator()));
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
         placeFigures();
@@ -44,7 +43,7 @@ public class ChessBoard extends VerticalLayout {
 
     private void placeFigures() {
         figures.addAll(cells.entrySet().stream()
-                .filter(e -> Color.BLACK.equals(e.getValue().getColor()))
+                .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
                 .map(this::addFigure).collect(Collectors.toList()));
     }
@@ -62,7 +61,7 @@ public class ChessBoard extends VerticalLayout {
             line.setSpacing(false);
 
             for(int x = 1; x < 9; ++x) {
-                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : Color.BLACK);
+                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
                 line.add(cell);
                 cells.put(cell.getKey(), cell);
             }
@@ -72,9 +71,8 @@ public class ChessBoard extends VerticalLayout {
     }
 
     private void recalculatePossibleSteps() {
-        cells.values().forEach(Cell::removeSelectedStyle);
-        figures.stream()
-                .filter(f -> currentTurn.equals(f.getColor()))
+        cleanupCells();
+        figures.stream().filter(f -> currentTurn.equals(f.getColor()))
                 .forEach(f -> f.calculatePossibleSteps(cells));
 
         boolean haveToEatAnything = figures.stream()
@@ -82,11 +80,12 @@ public class ChessBoard extends VerticalLayout {
                 .anyMatch(f -> !f.getFigureToBeEaten().isEmpty());
 
         if (haveToEatAnything)
-            figures.stream().filter(f -> f.getFigureToBeEaten().isEmpty()).forEach(f -> f.getPossibleSteps().clear());
+            figures.stream().filter(f -> f.getFigureToBeEaten().isEmpty())
+                    .forEach(f -> f.getPossibleSteps().clear());
     }
 
     private Figure addFigure(Map.Entry<CellKey, Cell> cellEntry) {
-        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? Color.BLACK : WHITE, cellEntry.getValue());
+        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
         cellEntry.getValue().setFigure(f);
         addFigureListener(f);
          return f;
@@ -116,27 +115,37 @@ public class ChessBoard extends VerticalLayout {
     }
 
     private void addCellListener(Cell cell) {
+
         cell.setOnClickListener(cell.addClickListener(event -> {
             selectedFigure.doStepTo(cell);
-            Optional.ofNullable(selectedFigure.getFigureToBeEaten().get(cell.getKey())).ifPresent(f -> {
-                f.toDie();
-                if (WHITE.equals(f.getColor())) {
-                    eatenWhites.add(f);
-                } else
-                    eatenBlacks.add(f);
-
-                figures.remove(f);
+            Optional.ofNullable(selectedFigure.getFigureToBeEaten().get(cell.getKey()))
+                    .ifPresent(f -> {
+                        f.toDie();
+                        figures.remove(f);
+                        isAnythingEaten = true;
             });
 
-            selectedFigure = null;
+            if (isAnythingEaten) {
+                cleanupCells();
+                selectedFigure.calculatePossibleSteps(cells);
+                // if still have anything to eat
+                if (!selectedFigure.getFigureToBeEaten().isEmpty()) {
+                    selectedFigure = null;
+                    return;
+                }
+                isAnythingEaten = false;
+            }
+
             revertTurn();
             recalculatePossibleSteps();
+            selectedFigure = null;
+            checkIsGameOver();
         }));
     }
 
     private void revertTurn() {
         if (WHITE.equals(currentTurn)) {
-            currentTurn = Color.BLACK;
+            currentTurn = BLACK;
             turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
         } else {
             currentTurn = WHITE;
@@ -152,5 +161,26 @@ public class ChessBoard extends VerticalLayout {
         turnIndicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
         turnIndicator.getStyle().set(BORDER_STYLE, "solid");
         return turnIndicator;
+    }
+
+    private void checkIsGameOver() {
+        Map<Color, List<Figure>> groupsByColor = figures.stream().collect(Collectors.groupingBy(Figure::getColor, Collectors.toList()));
+        if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
+            gameOver();
+    }
+
+    private void gameOver() {
+
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Game Over");
+        dialog.add(new Label(currentTurn.toString() + " wins!"));
+
+        Button okButton = new Button("OK", e -> dialog.close());
+        dialog.getFooter().add(okButton);
+        add(dialog, okButton);
+    }
+
+    private void cleanupCells() {
+        cells.values().forEach(Cell::removeSelectedStyle);
     }
 }
