@@ -34,8 +34,8 @@ public class Cell extends Div {
             getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
         }
 
-        setHeight("77px");
-        setWidth("77px");
+        setHeight("75px");
+        setWidth("75px");
     }
 
     public void setFigure(Figure figure) {
@@ -49,11 +49,11 @@ public class Cell extends Div {
     }
 
     public void addSelectedStyle() {
-        getStyle().set("filter", "brightness(0.50)");
+        getStyle().set(FILTER_PROP, "brightness(0.50)");
     }
 
     public void removeSelectedStyle() {
-        getStyle().remove("filter");
+        getStyle().remove(FILTER_PROP);
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
     }
 

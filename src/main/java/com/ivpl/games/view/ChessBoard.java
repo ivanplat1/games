@@ -1,10 +1,7 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.Color;
-import com.ivpl.games.entity.Cell;
-import com.ivpl.games.entity.CellKey;
-import com.ivpl.games.entity.Checker;
-import com.ivpl.games.entity.Figure;
+import com.ivpl.games.entity.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
@@ -29,7 +26,7 @@ public class ChessBoard extends VerticalLayout {
     private Div turnIndicator;
     private Figure selectedFigure;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
-    private final List<Figure> figures = new LinkedList<>();
+    private final List<Figure> figures = new ArrayList<>();
     private boolean isAnythingEaten;
 
     public ChessBoard() {
@@ -48,10 +45,17 @@ public class ChessBoard extends VerticalLayout {
                 .map(this::addFigure).collect(Collectors.toList()));
     }
 
+/*    private void placeFigures() {
+        figures.addAll(cells.entrySet().stream()
+                .filter(e -> BLACK.equals(e.getValue().getColor()))
+                .filter(e -> 2 == e.getKey().getY() || e.getKey().getY() == 7)
+                .map(this::addFigure).collect(Collectors.toList()));
+    }*/
+
     private VerticalLayout printBoard() {
         VerticalLayout board = new VerticalLayout();
         board.setSpacing(false);
-        board.getStyle().set(BORDER_WIDTH, "6px");
+        board.getStyle().set(BORDER_WIDTH, "15px");
         board.getStyle().set(BORDER_STYLE, "solid");
         board.setPadding(false);
         HorizontalLayout line;
@@ -77,10 +81,10 @@ public class ChessBoard extends VerticalLayout {
 
         boolean haveToEatAnything = figures.stream()
                 .filter(f -> currentTurn.equals(f.getColor()))
-                .anyMatch(f -> !f.getFigureToBeEaten().isEmpty());
+                .anyMatch(f -> !f.getFiguresToBeEaten().isEmpty());
 
         if (haveToEatAnything)
-            figures.stream().filter(f -> f.getFigureToBeEaten().isEmpty())
+            figures.stream().filter(f -> f.getFiguresToBeEaten().isEmpty())
                     .forEach(f -> f.getPossibleSteps().clear());
     }
 
@@ -118,18 +122,20 @@ public class ChessBoard extends VerticalLayout {
 
         cell.setOnClickListener(cell.addClickListener(event -> {
             selectedFigure.doStepTo(cell);
-            Optional.ofNullable(selectedFigure.getFigureToBeEaten().get(cell.getKey()))
+            Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
                     .ifPresent(f -> {
                         f.toDie();
                         figures.remove(f);
                         isAnythingEaten = true;
             });
 
+            replaceWithQueenIfNeeded(cell, selectedFigure.getColor());
+
             if (isAnythingEaten) {
                 cleanupCells();
                 selectedFigure.calculatePossibleSteps(cells);
                 // if still have anything to eat
-                if (!selectedFigure.getFigureToBeEaten().isEmpty()) {
+                if (!selectedFigure.getFiguresToBeEaten().isEmpty()) {
                     selectedFigure = null;
                     return;
                 }
@@ -182,5 +188,21 @@ public class ChessBoard extends VerticalLayout {
 
     private void cleanupCells() {
         cells.values().forEach(Cell::removeSelectedStyle);
+    }
+
+    private boolean isBorderCell(CellKey cellKey, Color figureColor) {
+        return WHITE.equals(figureColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
+    }
+
+    private void replaceWithQueenIfNeeded(Cell cell, Color figureColor) {
+        if (isBorderCell(cell.getKey(), figureColor)) {
+            Queen queen = new Queen(figureColor, cell);
+            addFigureListener(queen);
+            cell.remove(selectedFigure);
+            cell.setFigure(queen);
+            figures.remove(selectedFigure);
+            figures.add(queen);
+
+        }
     }
 }
