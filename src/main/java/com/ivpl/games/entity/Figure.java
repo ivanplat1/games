@@ -7,12 +7,9 @@ import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.dom.Style;
 import lombok.Getter;
 import lombok.NonNull;
-import org.apache.commons.lang3.Range;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.util.Pair;
 
-import javax.persistence.GeneratedValue;
 import java.util.*;
 
 import static com.ivpl.games.constants.Color.WHITE;
@@ -39,30 +36,30 @@ public abstract class Figure extends Div {
         possibleSteps.clear();
         figuresToBeEaten.clear();
         Set<CellKey> eatingCells = new HashSet<>();
-        getDirections().forEach(d -> d.forEach(dc -> {
-                CellKey currentPosition = position.getKey();
-                int x = currentPosition.getX() + dc[1];
-                int y = currentPosition.getY() + (WHITE.equals(color) ? dc[0]*-1 : dc[0]);
-
-                if (Range.between(1, 8).contains(x) && Range.between(1, 8).contains(y)) {
-                    CellKey targetKey = new CellKey(x, y);
-                    Cell targetCell = cells.get(targetKey);
-                    if (targetCell.getFigure() != null) {
-                        if (!getColor().equals(targetCell.getFigure().getColor())) {
-                            List<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
-
-                            cellsBehindTarget.forEach(c -> {
-                                figuresToBeEaten.put(c.getKey(), targetCell.getFigure());
-                                eatingCells.add(c.getKey());
-                            });
-                        }
-                    } else if (getClass() == Queen.class || (WHITE.equals(color)
-                            // revert for blacks
-                            ? currentPosition.getY() > targetKey.getY()
-                            : currentPosition.getY() < targetKey.getY()))
-                        possibleSteps.add(targetKey);
-                }
-            }));
+        CellKey currentPosition = position.getKey();
+        int currentX = currentPosition.getX();
+        int currentY = currentPosition.getY();
+        getDirections().values()
+                .forEach(d -> d.stream()
+                        .map(dc -> new CellKey(currentX+dc[1], currentY+(WHITE.equals(color) ? dc[0]*-1 : dc[0])))
+                        .filter(c -> c.inRange(1, 8))
+                        .map(k -> Optional.ofNullable(cells.get(k)))
+                        .filter(Optional::isPresent).map(Optional::get)
+                        .takeWhile(c -> !c.hasFigure() || !getColor().equals(c.getFigure().getColor()))
+                        .forEach(targetCell -> {
+                            if (targetCell.hasFigure()) {
+                                List<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
+                                cellsBehindTarget.forEach(c -> {
+                                    figuresToBeEaten.put(c.getKey(), targetCell.getFigure());
+                                    eatingCells.add(c.getKey());
+                                });
+                            } else if (getClass() == Queen.class || (WHITE.equals(color)
+                                    // filter out steps back
+                                    ? currentPosition.getY() > targetCell.getKey().getY()
+                                    : currentPosition.getY() < targetCell.getKey().getY()))
+                                possibleSteps.add(targetCell.getKey());
+                        })
+        );
         if (!eatingCells.isEmpty()) {
             possibleSteps.clear();
             possibleSteps.addAll(eatingCells);
@@ -88,7 +85,7 @@ public abstract class Figure extends Div {
         }
     }
 
-    private List<List<int[]>> getDirections() {
+    private Map<String, List<int[]>> getDirections() {
         return DirectionsForClassRepo.getDirectionsForClass(getClass());
     }
 

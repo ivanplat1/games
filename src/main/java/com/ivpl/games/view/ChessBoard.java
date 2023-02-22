@@ -38,19 +38,19 @@ public class ChessBoard extends VerticalLayout {
         recalculatePossibleSteps();
     }
 
-    private void placeFigures() {
+/*    private void placeFigures() {
         figures.addAll(cells.entrySet().stream()
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
                 .map(this::addFigure).collect(Collectors.toList()));
-    }
+    }*/
 
-/*    private void placeFigures() {
+    private void placeFigures() {
         figures.addAll(cells.entrySet().stream()
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> 2 == e.getKey().getY() || e.getKey().getY() == 7)
                 .map(this::addFigure).collect(Collectors.toList()));
-    }*/
+    }
 
     private VerticalLayout printBoard() {
         VerticalLayout board = new VerticalLayout();
@@ -89,7 +89,7 @@ public class ChessBoard extends VerticalLayout {
     }
 
     private Figure addFigure(Map.Entry<CellKey, Cell> cellEntry) {
-        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
+        Figure f = new Checker(cellEntry.getKey().getY() > 5 ? BLACK : WHITE, cellEntry.getValue());
         cellEntry.getValue().setFigure(f);
         addFigureListener(f);
          return f;

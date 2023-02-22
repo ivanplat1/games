@@ -57,4 +57,7 @@ public class Cell extends Div {
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
     }
 
+    public boolean hasFigure() {
+        return figure != null;
+    }
 }

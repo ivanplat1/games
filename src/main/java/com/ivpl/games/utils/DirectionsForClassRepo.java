@@ -5,27 +5,30 @@ import com.ivpl.games.entity.Figure;
 import com.ivpl.games.entity.Queen;
 import org.springframework.stereotype.Repository;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Repository
 public class DirectionsForClassRepo {
 
-    static Map<Class<?>, List<List<int[]>>> repository  = new HashMap<>();
+    static Map<Class<?>, Map<String, List<int[]>>> repository  = new HashMap<>();
 
     public DirectionsForClassRepo() {
         repository.put(Checker.class, calculateDirections(1));
         repository.put(Queen.class, calculateDirections(7));
     }
 
-    public static List<List<int[]>> getDirectionsForClass(Class<? extends Figure> clazz) {
+    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends Figure> clazz) {
         return repository.get(clazz);
     }
 
-    private List<List<int[]>> calculateDirections(int range) {
-        List<List<int[]>> directions = new LinkedList<>();
+    public static List<int[]> getCertainDirectionForClass(Class<? extends Figure> clazz, String key) {
+        return Optional.ofNullable(getDirectionsForClass(clazz)).map(ds -> ds.get(key))
+                .orElseThrow(() -> new NoSuchElementException(
+                        String.format("Directions are not implemented for Figure child class %s", clazz.getName())));
+    }
+
+    private Map<String, List<int[]>> calculateDirections(int range) {
+        Map<String, List<int[]>> directions = new LinkedHashMap<>();
         for (int i = 1; i < 5; i++) {
             List<int[]> direction = new LinkedList<>();
             for (int j = 1; j < range+1; j++) {
@@ -46,7 +49,7 @@ public class DirectionsForClassRepo {
                         break;
                 }
             }
-            directions.add(direction);
+            directions.put(Arrays.toString(direction.get(0)), direction);
         }
         return directions;
     }

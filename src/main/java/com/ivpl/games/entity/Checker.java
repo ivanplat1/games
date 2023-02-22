@@ -24,7 +24,7 @@ public class Checker extends Figure {
         List<Cell> list = new ArrayList<>();
         CellKey key = new CellKey(sourceKey.getX()+(targetKey.getX()-sourceKey.getX())*2,
                 sourceKey.getY()+(targetKey.getY()- sourceKey.getY())*2);
-        Optional.ofNullable(cells.get(key)).filter(c -> c.getFigure() == null).ifPresent(list::add);
+        Optional.ofNullable(cells.get(key)).filter(c -> !c.hasFigure()).ifPresent(list::add);
         return list;
     }
 }

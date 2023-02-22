@@ -2,6 +2,7 @@ package com.ivpl.games.entity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.apache.commons.lang3.Range;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -26,5 +27,9 @@ public class CellKey implements Serializable {
     @Override
     public int hashCode() {
         return 31 * x + y;
+    }
+
+    public boolean inRange(int from, int to) {
+        return Range.between(from, to).contains(x) && Range.between(from, to).contains(y);
     }
 }
