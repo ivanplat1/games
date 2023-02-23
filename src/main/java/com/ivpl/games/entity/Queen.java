@@ -33,7 +33,8 @@ public class Queen extends Figure {
                 .filter(c -> c.inRange(1, 8))
                 .map(k -> Optional.ofNullable(cells.get(k)))
                 .filter(Optional::isPresent).map(Optional::get)
-                .filter(c -> !c.hasFigure()).collect(Collectors.toList());
+                .takeWhile(c -> !c.hasFigure())
+                .collect(Collectors.toList());
     }
 
     private String calculateDirectionKey(CellKey sourceKey, CellKey targetKey) {

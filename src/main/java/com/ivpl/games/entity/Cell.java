@@ -29,9 +29,9 @@ public class Cell extends Div {
         this.color = color;
 
         if (Color.WHITE.equals(color)) {
-            getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
+            addClassName("white-cell");
         } else {
-            getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
+            addClassName("black-cell");
         }
 
         setHeight("75px");
