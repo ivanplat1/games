@@ -2,9 +2,11 @@ package com.ivpl.games.security;
 
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinServletRequest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Component;
 
@@ -29,5 +31,10 @@ public class SecurityService {
         logoutHandler.logout(
                 VaadinServletRequest.getCurrent().getHttpServletRequest(), null,
                 null);
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

@@ -1,5 +1,6 @@
 package com.ivpl.games.view;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.html.H1;
 import com.vaadin.flow.component.login.LoginForm;
@@ -25,7 +26,7 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
         setAlignItems(Alignment.CENTER);
         login.setAction("login");
 
-        add(new H1("Checkers"), login, new Button("Sign In"));
+        add(new H1("Checkers"), login, new Button("Sign In", e -> UI.getCurrent().navigate(RegistrationView.class)));
     }
 
     @Override
