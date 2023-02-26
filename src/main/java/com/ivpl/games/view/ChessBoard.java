@@ -35,7 +35,7 @@ import static com.ivpl.games.constants.Constants.*;
 @PermitAll
 public class ChessBoard extends VerticalLayout {
 
-    private SecurityService securityService;
+    private final transient SecurityService securityService;
     Registration broadcasterRegistration;
 
     private Color currentTurn = WHITE;
@@ -249,7 +249,8 @@ public class ChessBoard extends VerticalLayout {
 
     private Button createNewGameButton() {
         return new Button("New Game", e -> {
-            //Broadcaster.broadcast("New Game");
+            removeAll();
+            showColorSelector();
         });
     }
 
