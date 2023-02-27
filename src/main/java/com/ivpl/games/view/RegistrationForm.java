@@ -1,6 +1,7 @@
 package com.ivpl.games.view;
 
 import com.vaadin.flow.component.HasValueAndElement;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.formlayout.FormLayout;
@@ -13,16 +14,16 @@ import java.util.stream.Stream;
 
 public class RegistrationForm extends FormLayout {
 
-    private H3 title;
+    private final H3 title;
 
-    private TextField username;
+    private final TextField username;
 
-    private PasswordField password;
-    private PasswordField passwordConfirm;
+    private final PasswordField password;
+    private final PasswordField passwordConfirm;
 
-    private Span errorMessageField;
+    private final Span errorMessageField;
 
-    private Button submitButton;
+    private final Button submitButton;
 
 
     public RegistrationForm() {
@@ -40,10 +41,12 @@ public class RegistrationForm extends FormLayout {
 
         submitButton = new Button("Register");
         submitButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button loginButton = new Button("Go to Login", e-> UI.getCurrent().navigate(LoginView.class));
+        loginButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
         add(title, username, password,
                 passwordConfirm, errorMessageField,
-                submitButton);
+                submitButton, loginButton);
 
         // Max width of the Form
         setMaxWidth("500px");
@@ -63,6 +66,8 @@ public class RegistrationForm extends FormLayout {
     }
 
     public PasswordField getPasswordField() { return password; }
+
+    public TextField getUsernameField() { return username; }
 
     public PasswordField getPasswordConfirmField() { return passwordConfirm; }
 

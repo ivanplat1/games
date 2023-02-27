@@ -31,7 +31,7 @@ import static com.ivpl.games.constants.Constants.*;
 
 @CssImport("./styles/styles.css")
 
-@Route("checkers")
+@Route("")
 @PermitAll
 public class ChessBoard extends VerticalLayout {
 
