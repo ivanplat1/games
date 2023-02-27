@@ -19,7 +19,6 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.shared.Registration;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.annotation.security.PermitAll;
 import java.util.*;
@@ -31,7 +30,7 @@ import static com.ivpl.games.constants.Constants.*;
 
 @CssImport("./styles/styles.css")
 
-@Route("")
+@Route("checkers")
 @PermitAll
 public class ChessBoard extends VerticalLayout {
 
@@ -45,7 +44,6 @@ public class ChessBoard extends VerticalLayout {
     private final List<Figure> figures = new ArrayList<>();
     private boolean isAnythingEaten;
 
-    @Autowired
     public ChessBoard(SecurityService securityService) {
         this.securityService = securityService;
         showColorSelector();
