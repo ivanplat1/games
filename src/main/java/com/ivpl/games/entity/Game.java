@@ -8,6 +8,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import java.sql.Timestamp;
+import java.util.Date;
 
 @Entity
 @Table(name = "GAMES")
@@ -21,13 +23,15 @@ public class Game {
     private Long secondUserId;
     private String type;
     private String status;
+    private Timestamp startDate;
 
     public Game() {}
 
     public Game(Long userId, String type) {
         this.userId = userId;
         this.type = type;
-        this.status = GameStatus.IN_PROGRESS.toString();
+        this.status = GameStatus.IN_PROGRESS.name();
+        this.startDate = new Timestamp(new Date().getTime());
     }
 
     @Override
@@ -36,6 +40,6 @@ public class Game {
     }
 
     public boolean isNotFinished() {
-        return !GameStatus.FINISHED.toString().equals(status);
+        return !GameStatus.FINISHED.name().equals(status);
     }
 }
