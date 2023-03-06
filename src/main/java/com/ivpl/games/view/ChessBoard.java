@@ -287,20 +287,12 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         dialog.setHeaderTitle(COOSE_YOUR_COLOR_STR);
         Div black = UIComponentsService.getTurnIndicator(BLACK);
         black.addClickListener(e -> {
-            try {
-                newGame(BLACK);
-            } catch (AuthenticationException ex) {
-                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
-            }
+            newGame(BLACK);
             dialog.close();
         });
         Div white = UIComponentsService.getTurnIndicator(WHITE);
         white.addClickListener(e -> {
-            try {
-                newGame(WHITE);
-            } catch (AuthenticationException ex) {
-                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
-            }
+            newGame(WHITE);
             dialog.close();
         });
         HorizontalLayout hLayout = new HorizontalLayout(white, black);
