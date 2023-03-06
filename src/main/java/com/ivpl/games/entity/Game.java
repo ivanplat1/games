@@ -1,8 +1,9 @@
 package com.ivpl.games.entity;
 
+import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.GameStatus;
-import com.ivpl.games.constants.GameType;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -14,32 +15,26 @@ import java.util.Date;
 @Entity
 @Table(name = "GAMES")
 @Getter
+@Setter
 public class Game {
 
     @Id
     @GeneratedValue
     private Long id;
-    private Long userId;
-    private Long secondUserId;
+    private Long user1Id;
+    private Color colorUser1;
+    private Long user2Id;
+    private Color colorUser2;
     private String type;
     private String status;
     private Timestamp startDate;
 
     public Game() {}
 
-    public Game(Long userId, String type) {
-        this.userId = userId;
+    public Game(Long user1Id, String type) {
+        this.user1Id = user1Id;
         this.type = type;
-        this.status = GameStatus.IN_PROGRESS.name();
+        this.status = GameStatus.WAITING_FOR_OPPONENT.name();
         this.startDate = new Timestamp(new Date().getTime());
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Game %s of Type %s in status %s of user %s", getId(), getType(), getStatus(), getUserId());
-    }
-
-    public boolean isNotFinished() {
-        return !GameStatus.FINISHED.name().equals(status);
     }
 }

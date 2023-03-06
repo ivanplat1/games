@@ -2,8 +2,6 @@ package com.ivpl.games.view;
 
 import com.ivpl.games.entity.User;
 import com.ivpl.games.repository.UserRepository;
-import com.vaadin.flow.component.UI;
-import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.component.notification.Notification;
@@ -75,7 +73,7 @@ public class RegistrationView extends VerticalLayout {
                     User user = new User();
                     binder.writeBean(user);
                     user.setPassword(passwordEncoder.encode(user.getPassword()));
-                    userRepository.save(user);
+                    userRepository.saveAndFlush(user);
                     showSuccess(user);
                 } catch (ValidationException e) {
 

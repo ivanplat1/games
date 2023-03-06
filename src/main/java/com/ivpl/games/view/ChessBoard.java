@@ -3,22 +3,26 @@ package com.ivpl.games.view;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.*;
 import com.ivpl.games.security.SecurityService;
-import com.ivpl.games.services.Broadcaster;
-import com.vaadin.flow.component.AttachEvent;
-import com.vaadin.flow.component.ClickEvent;
-import com.vaadin.flow.component.ComponentUtil;
-import com.vaadin.flow.component.UI;
+import com.ivpl.games.services.UIComponentsService;
+import com.ivpl.games.services.broadcasting.BroadcasterService;
+import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.*;
 import com.vaadin.flow.shared.Registration;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.tomcat.websocket.AuthenticationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.security.PermitAll;
 import java.util.*;
@@ -32,21 +36,36 @@ import static com.ivpl.games.constants.Constants.*;
 
 @Route("checkers")
 @PermitAll
-public class ChessBoard extends VerticalLayout {
+public class ChessBoard extends VerticalLayout implements HasUrlParameter<String> {
+
+    private static final Logger log = LoggerFactory.getLogger(ChessBoard.class);
+
+    private static final String CHESS_BOARD_WHITES_STYLE = "chess-board-whites";
+    private static final String CHESS_BOARD_BLACKS_STYLE = "chess-board-blacks";
+    private static final String BOARD_LINE_WHITES_STYLE = "board-line-whites";
+    private static final String BOARD_LINE_BLACKS_STYLE = "board-line-blacks";
 
     private final transient SecurityService securityService;
+    private final transient UIComponentsService uiComponentsService;
+    private final transient BroadcasterService broadcasterService;
     Registration broadcasterRegistration;
 
+    private Long gameId;
     private Color currentTurn = WHITE;
     private Div turnIndicator;
     private Figure selectedFigure;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
     private final List<Figure> figures = new ArrayList<>();
     private boolean isAnythingEaten;
+    private VerticalLayout board;
 
-    public ChessBoard(SecurityService securityService) {
+    public ChessBoard(SecurityService securityService,
+                      UIComponentsService uiComponentsService,
+                      BroadcasterService broadcasterService) {
         this.securityService = securityService;
-        showColorSelector();
+        this.uiComponentsService = uiComponentsService;
+        this.broadcasterService = broadcasterService;
+        showSelectColorDialogForNewGame();
     }
 
     private void placeFigures() {
@@ -57,37 +76,26 @@ public class ChessBoard extends VerticalLayout {
     }
 
     private VerticalLayout printBoard(Color color) {
-        VerticalLayout board = new VerticalLayout();
+        board = new VerticalLayout();
         board.setSpacing(false);
-        board.addClassName("chess-board");
+        board.addClassName(CHESS_BOARD_WHITES_STYLE);
         board.setPadding(false);
         HorizontalLayout line;
 
-        if (WHITE.equals(color)) {
-            for (int y = 1; y < 9; ++y) {
-                line = new HorizontalLayout();
-                line.setSpacing(false);
+        for (int y = 1; y < 9; ++y) {
+            line = new HorizontalLayout();
+            line.setSpacing(false);
 
-                for(int x = 1; x < 9; ++x) {
-                    Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
-                    line.add(cell);
-                    cells.put(cell.getKey(), cell);
-                }
-                board.add(line);
+            for (int x = 1; x < 9; ++x) {
+                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
+                line.add(cell);
+                cells.put(cell.getKey(), cell);
             }
-        } else {
-            for (int y = 8; y > 0; --y) {
-                line = new HorizontalLayout();
-                line.setSpacing(false);
-
-                for(int x = 8; x > 0; --x) {
-                    Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
-                    line.add(cell);
-                    cells.put(cell.getKey(), cell);
-                }
-                board.add(line);
-            }
+            board.add(line);
         }
+
+        if (BLACK.equals(color))
+            reverseBoard();
         return board;
     }
 
@@ -115,7 +123,7 @@ public class ChessBoard extends VerticalLayout {
     private void addFigureListener(Figure f) {
         f.setOnClickListener(f.addClickListener(e -> {
             if (f.equals(e.getSource()))
-                Broadcaster.broadcast(Pair.of(this.hashCode(), f.getPosition().getKey()));
+                broadcasterService.getBroadcaster(gameId).broadcast(Pair.of(this.hashCode(), f.getPosition().getKey()));
             if (f.getPossibleSteps().isEmpty() || !currentTurn.equals(f.getColor())) return;
             f.selectUnselectFigure();
             if (!f.equals(selectedFigure)) {
@@ -140,7 +148,7 @@ public class ChessBoard extends VerticalLayout {
     private void addCellListener(Cell cell) {
         cell.setOnClickListener(cell.addClickListener(event -> {
             if (cell.equals(event.getSource()))
-                Broadcaster.broadcast(Pair.of(UI.getCurrent().getUIId(), cell.getKey()));
+                broadcasterService.getBroadcaster(gameId).broadcast(Pair.of(UI.getCurrent().getUIId(), cell.getKey()));
             selectedFigure.doStepTo(cell);
             Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
                     .ifPresent(f -> {
@@ -178,20 +186,9 @@ public class ChessBoard extends VerticalLayout {
         }
     }
 
-
     private Div addTurnIndicator() {
-        turnIndicator = createTurnIndicator(WHITE);
+        turnIndicator = UIComponentsService.getTurnIndicator(WHITE);
         return turnIndicator;
-    }
-
-    private Div createTurnIndicator(Color color) {
-        Div indicator = new Div();
-        indicator.addClassName("turnIndicator");
-        indicator.setHeight("50px");
-        indicator.setWidth("50px");
-        indicator.getStyle().set(BACKGROUND, WHITE.equals(color) ? WHITE_CELL_COLOR : BLACK_CELL_COLOR);
-        indicator.getStyle().set(BORDER_STYLE, "solid");
-        return indicator;
     }
 
     private void checkIsGameOver() {
@@ -229,7 +226,6 @@ public class ChessBoard extends VerticalLayout {
             cell.setFigure(queen);
             figures.remove(selectedFigure);
             figures.add(queen);
-
         }
     }
 
@@ -242,19 +238,18 @@ public class ChessBoard extends VerticalLayout {
         menuLayout.setPadding(false);
         menuLayout.setSpacing(false);
         return new VerticalLayout(indicatorLayout, menuLayout,
-                new Button("Logout", click -> securityService.logout()));
+                new Button("Logout", click -> securityService.logout()),
+                new Button(new Icon(VaadinIcon.REFRESH), e -> reverseBoard()));
     }
 
     private Button createNewGameButton() {
-        return new Button("New Game", e -> {
-            removeAll();
-            showColorSelector();
-        });
+        return new Button(NEW_GAME_STR, e -> showSelectColorDialogForNewGame());
     }
 
     private void newGame(Color color) {
         removeAll();
         cleanUpVariables();
+        add(uiComponentsService.getHeader());
         HorizontalLayout mainLayout = new HorizontalLayout(printBoard(color), createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
@@ -274,7 +269,7 @@ public class ChessBoard extends VerticalLayout {
     @Override
     protected void onAttach(AttachEvent attachEvent) {
         UI ui = attachEvent.getUI();
-        broadcasterRegistration = Broadcaster.register(e -> {
+        broadcasterRegistration = broadcasterService.registerBroadcasterListener(gameId, e -> {
             if (this.hashCode() != e.getLeft()) {
                 Optional.ofNullable(cells.get(e.getRight())).ifPresent(c -> {
                     if (c.hasFigure()) {
@@ -287,25 +282,56 @@ public class ChessBoard extends VerticalLayout {
         });
     }
 
-    private void showColorSelector() {
+    private void showSelectColorDialogForNewGame() {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Chose Your Color");
-        Div black = createTurnIndicator(BLACK);
+        dialog.setHeaderTitle(COOSE_YOUR_COLOR_STR);
+        Div black = UIComponentsService.getTurnIndicator(BLACK);
         black.addClickListener(e -> {
-            newGame(BLACK);
+            try {
+                newGame(BLACK);
+            } catch (AuthenticationException ex) {
+                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
+            }
             dialog.close();
         });
-        Div white = createTurnIndicator(WHITE);
+        Div white = UIComponentsService.getTurnIndicator(WHITE);
         white.addClickListener(e -> {
-            newGame(WHITE);
+            try {
+                newGame(WHITE);
+            } catch (AuthenticationException ex) {
+                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
+            }
             dialog.close();
         });
         HorizontalLayout hLayout = new HorizontalLayout(white, black);
         VerticalLayout dialogLayout = new VerticalLayout(hLayout);
-        dialogLayout.setAlignItems(Alignment.CENTER);
+        dialogLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         dialogLayout.setClassName("general-text");
         dialog.add(dialogLayout);
         add(dialog);
         dialog.open();
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        broadcasterRegistration.remove();
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String gameId) {
+        this.gameId = Long.valueOf(gameId);
+    }
+
+    private void reverseBoard() {
+        if (CHESS_BOARD_WHITES_STYLE.equals(board.getClassName())) {
+            board.setClassName(CHESS_BOARD_BLACKS_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_BLACKS_STYLE));
+        } else {
+            board.setClassName(CHESS_BOARD_WHITES_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_WHITES_STYLE));
+        }
+
+
+
     }
 }

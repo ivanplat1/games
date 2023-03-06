@@ -28,6 +28,7 @@ public class SecurityConfiguration
         this.jpaUserDetailsManager = jpaUserDetailsManager;
     }
 
+    @Override
     @Autowired
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(jpaUserDetailsManager).passwordEncoder(securityService.passwordEncoder());

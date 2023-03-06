@@ -1,7 +1,9 @@
 package com.ivpl.games.security;
 
+import com.ivpl.games.entity.User;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinServletRequest;
+import org.apache.tomcat.websocket.AuthenticationException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,14 +17,14 @@ public class SecurityService {
 
     private static final String LOGOUT_SUCCESS_URL = "/";
 
-    public UserDetails getAuthenticatedUser() {
+    public User getAuthenticatedUser() throws AuthenticationException {
         SecurityContext context = SecurityContextHolder.getContext();
         Object principal = context.getAuthentication().getPrincipal();
         if (principal instanceof UserDetails) {
-            return (UserDetails) context.getAuthentication().getPrincipal();
+            return (User) context.getAuthentication().getPrincipal();
         }
         // Anonymous or no authentication.
-        return null;
+        throw new AuthenticationException("Page should not be available for unauthorized users.");
     }
 
     public void logout() {
