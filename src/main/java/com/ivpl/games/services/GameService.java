@@ -25,16 +25,16 @@ public class GameService {
     }
 
     public void newGame(User user) {
-        Game game = new Game(user.getId(), GameType.CHECKERS.toString());
+        Game game = new Game(user.getId(), GameType.CHECKERS);
         gameRepository.saveAndFlush(game);
         UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
     }
 
     public void joinGame(Game game, User user) {
-        Color color = WHITE.equals(game.getColorUser1()) ? BLACK : WHITE;
-        game.setUser2Id(user.getId());
-        game.setColorUser2(color);
-        game.setStatus(GameStatus.IN_PROGRESS.name());
+        Color color = WHITE.equals(game.getColorPlayer1()) ? BLACK : WHITE;
+        game.setPlayer2Id(user.getId());
+        game.setColorPlayer2(color);
+        game.setStatus(GameStatus.IN_PROGRESS);
         gameRepository.saveAndFlush(game);
         UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
     }

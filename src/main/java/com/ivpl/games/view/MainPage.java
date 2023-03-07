@@ -32,8 +32,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.ivpl.games.constants.Constants.*;
-import static com.ivpl.games.constants.GameStatus.IN_PROGRESS;
-import static com.ivpl.games.constants.GameStatus.WAITING_FOR_OPPONENT;
+import static com.ivpl.games.constants.GameStatus.*;
 
 @Route("")
 public class MainPage extends VerticalLayout {
@@ -106,7 +105,7 @@ public class MainPage extends VerticalLayout {
     }
 
     private void refreshActiveGamesGrid(Grid<Game> grid) {
-        grid.setItems(gameRepository.findAllByStatusIn(Set.of(IN_PROGRESS.name(), WAITING_FOR_OPPONENT.name())));
+        grid.setItems(gameRepository.findAllByStatusIn(Set.of(SELECTING_COLOR, IN_PROGRESS, WAITING_FOR_OPPONENT)));
     }
 
     private static ComponentRenderer<Span, Game> createStatusComponentRenderer() {
@@ -115,12 +114,15 @@ public class MainPage extends VerticalLayout {
 
     private static final SerializableBiConsumer<Span, Game> statusComponentUpdater = (
             span, game) -> {
-        if (IN_PROGRESS.name().equals(game.getStatus())) {
+        if (IN_PROGRESS.equals(game.getStatus())) {
             span.setClassName("badge-orange");
             span.setText(IN_PROGRESS.getLabel());
-        } else {
+        } else if (WAITING_FOR_OPPONENT.equals(game.getStatus())) {
             span.setClassName("badge-green");
             span.setText(WAITING_FOR_OPPONENT.getLabel());
+        } else if (SELECTING_COLOR.equals(game.getStatus())) {
+            span.setClassName("badge-rose");
+            span.setText(SELECTING_COLOR.getLabel());
         }
     };
 
@@ -130,13 +132,13 @@ public class MainPage extends VerticalLayout {
 
     private Renderer<Game> createUsersRenderer() {
         return LitRenderer.<Game> of(PLAYERS_CELL_HTML)
-                .withProperty("user", game -> Optional.ofNullable(game.getUser1Id())
+                .withProperty("user", game -> Optional.ofNullable(game.getPlayer1Id())
                         .map(userRepository::findById).map(user -> user.map(User::getUsername).orElse(StringUtils.EMPTY)).orElse(StringUtils.EMPTY))
-                .withProperty("nick", game -> Optional.ofNullable(game.getUser1Id())
+                .withProperty("nick", game -> Optional.ofNullable(game.getPlayer1Id())
                         .map(userRepository::findById).map(user -> user.map(User::getNick).orElse(StringUtils.EMPTY)).orElse(StringUtils.EMPTY))
-                .withProperty("secondUser", game -> Optional.ofNullable(game.getUser2Id())
+                .withProperty("secondUser", game -> Optional.ofNullable(game.getPlayer2Id())
                 .map(userRepository::findById).map(user -> user.map(User::getUsername).orElse(StringUtils.EMPTY)).orElse(StringUtils.EMPTY))
-                .withProperty("nick2", game -> Optional.ofNullable(game.getUser2Id())
+                .withProperty("nick2", game -> Optional.ofNullable(game.getPlayer2Id())
                 .map(userRepository::findById).map(user -> user.map(User::getNick).orElse(StringUtils.EMPTY)).orElse(StringUtils.EMPTY));
     }
 
@@ -148,11 +150,11 @@ public class MainPage extends VerticalLayout {
 
     private final SerializableBiConsumer<Button, Game> actionComponentUpdater = (
             button, game) -> {
-        if (IN_PROGRESS.name().equals(game.getStatus())) {
+        if (IN_PROGRESS.equals(game.getStatus())) {
             button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
             button.setIcon(new Icon(VaadinIcon.EYE));
             button.setTooltipText("Spectate");
-        } else {
+        } else if (WAITING_FOR_OPPONENT.equals(game.getStatus())) {
             button.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
             button.setIcon(new Icon(VaadinIcon.SWORD));
             button.setTooltipText("Fight");
@@ -163,6 +165,8 @@ public class MainPage extends VerticalLayout {
                     log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
                 }
             });
+        } else {
+            button.setVisible(false);
         }
     };
 

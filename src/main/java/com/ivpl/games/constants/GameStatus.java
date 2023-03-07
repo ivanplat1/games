@@ -3,9 +3,11 @@ package com.ivpl.games.constants;
 import lombok.Getter;
 
 public enum GameStatus {
-    FINISHED("Finished"),
+    SELECTING_COLOR("Player Is Selecting Color"),
+    WAITING_FOR_OPPONENT("Waiting For Opponent"),
     IN_PROGRESS("In Progress"),
-    WAITING_FOR_OPPONENT("Waiting For Opponent");
+    FINISHED("Finished");
+
 
     @Getter
     String label;

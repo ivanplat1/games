@@ -83,6 +83,15 @@
     border-radius: 5px;
 }
 
+.badge-rose {
+    background-color: #fad0eb;
+    color: #962036;
+    padding: 4px 8px;
+    font-weight: 700;
+    text-align: center;
+    border-radius: 5px;
+}
+
 .label-text {
     font-size: 1.5rem;
     font-weight: 700;

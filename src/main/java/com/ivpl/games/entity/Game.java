@@ -2,6 +2,7 @@ package com.ivpl.games.entity;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.GameStatus;
+import com.ivpl.games.constants.GameType;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -21,20 +22,20 @@ public class Game {
     @Id
     @GeneratedValue
     private Long id;
-    private Long user1Id;
-    private Color colorUser1;
-    private Long user2Id;
-    private Color colorUser2;
-    private String type;
-    private String status;
+    private Long player1Id;
+    private Color colorPlayer1;
+    private Long player2Id;
+    private Color colorPlayer2;
+    private GameType type;
+    private GameStatus status;
     private Timestamp startDate;
 
     public Game() {}
 
-    public Game(Long user1Id, String type) {
-        this.user1Id = user1Id;
+    public Game(Long player1Id, GameType type) {
+        this.player1Id = player1Id;
         this.type = type;
-        this.status = GameStatus.WAITING_FOR_OPPONENT.name();
+        this.status = GameStatus.SELECTING_COLOR;
         this.startDate = new Timestamp(new Date().getTime());
     }
 }
