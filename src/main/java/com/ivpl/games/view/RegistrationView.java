@@ -1,6 +1,6 @@
 package com.ivpl.games.view;
 
-import com.ivpl.games.entity.User;
+import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.UserRepository;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.Route;

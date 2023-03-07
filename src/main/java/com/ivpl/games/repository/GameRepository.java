@@ -1,7 +1,7 @@
 package com.ivpl.games.repository;
 
 import com.ivpl.games.constants.GameStatus;
-import com.ivpl.games.entity.Game;
+import com.ivpl.games.entity.jpa.Game;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

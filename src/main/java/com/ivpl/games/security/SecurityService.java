@@ -1,6 +1,6 @@
 package com.ivpl.games.security;
 
-import com.ivpl.games.entity.User;
+import com.ivpl.games.entity.jpa.User;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.server.VaadinServletRequest;
 import org.apache.tomcat.websocket.AuthenticationException;

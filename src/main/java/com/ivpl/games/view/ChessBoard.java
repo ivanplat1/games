@@ -2,6 +2,7 @@ package com.ivpl.games.view;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.*;
+import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.UIComponentsService;
@@ -231,15 +232,13 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private VerticalLayout createRightSidebar() {
-        Label label = new Label("TURN");
-        label.addClassName("general-text");
-        HorizontalLayout indicatorLayout = new HorizontalLayout(label, addTurnIndicator());
+        Button inverseBtn = new Button(new Icon(VaadinIcon.REFRESH), e -> reverseBoard());
+        HorizontalLayout indicatorLayout = new HorizontalLayout(inverseBtn, addTurnIndicator());
         indicatorLayout.setAlignItems(Alignment.CENTER);
         HorizontalLayout menuLayout = new HorizontalLayout();
         menuLayout.setPadding(false);
         menuLayout.setSpacing(false);
-        return new VerticalLayout(indicatorLayout, menuLayout,
-                new Button(new Icon(VaadinIcon.REFRESH), e -> reverseBoard()));
+        return new VerticalLayout(indicatorLayout, menuLayout);
     }
 
     private Button createNewGameButton() {

@@ -1,7 +1,7 @@
 package com.ivpl.games.view;
 
-import com.ivpl.games.entity.Game;
-import com.ivpl.games.entity.User;
+import com.ivpl.games.entity.jpa.Game;
+import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.UserRepository;
 import com.ivpl.games.security.SecurityService;

@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.jpa;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.GameStatus;
@@ -29,8 +29,9 @@ public class Game {
     private GameType type;
     private GameStatus status;
     private Timestamp startDate;
+    private Integer stepCount;
 
-    public Game() {}
+    protected Game() {}
 
     public Game(Long player1Id, GameType type) {
         this.player1Id = player1Id;

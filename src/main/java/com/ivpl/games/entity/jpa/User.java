@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.jpa;
 
 import lombok.Getter;
 import lombok.Setter;

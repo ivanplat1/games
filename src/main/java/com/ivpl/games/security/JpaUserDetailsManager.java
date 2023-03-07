@@ -1,6 +1,6 @@
 package com.ivpl.games.security;
 
-import com.ivpl.games.entity.User;
+import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
