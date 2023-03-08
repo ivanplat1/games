@@ -13,7 +13,6 @@ import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import static com.ivpl.games.constants.Constants.PASSWORD_VALIDATION_EXCEPTION_MESSAGE;
@@ -27,7 +26,6 @@ public class RegistrationView extends VerticalLayout {
     private final transient UserRepository userRepository;
     private final transient BCryptPasswordEncoder passwordEncoder;
 
-    @Autowired
     public RegistrationView(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;

@@ -5,11 +5,9 @@ import com.ivpl.games.constants.GameStatus;
 import com.ivpl.games.constants.GameType;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
@@ -29,6 +27,9 @@ public class Game {
     private GameType type;
     private GameStatus status;
     private Timestamp startDate;
+    @Column(columnDefinition = "int[]")
+    @Type(type = "com.ivpl.games.entity.IntegerArrayType")
+    private Integer[] figures;
     private Integer stepCount;
 
     protected Game() {}

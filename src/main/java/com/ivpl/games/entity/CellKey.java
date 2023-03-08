@@ -25,6 +25,11 @@ public class CellKey implements Serializable {
         return x == ((CellKey) obj).getX() && y == ((CellKey) obj).getY();
     }
 
+    public CellKey(Integer[] arr) {
+        x = arr[0];
+        y = arr[1];
+    }
+
     @Override
     public int hashCode() {
         return 31 * x + y;

@@ -50,12 +50,15 @@ public class GameService {
         UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
     }
 
-    public void saveStep(Long gameId,
+    public void saveStep(Game game,
                          Color playerColor,
                          CellKey from,
                          CellKey to,
-                         Integer figureId) {
-        Step step = new Step(gameId, increaseStepCount(gameId), playerColor, from, to, figureId);
+                         Integer figureId,
+                         Integer[] figures) {
+        Step step = new Step(game.getId(), increaseStepCount(game.getId()), playerColor, from, to, figureId);
+        game.setFigures(figures);
+        gameRepository.saveAndFlush(game);
         stepRepository.saveAndFlush(step);
     }
 

@@ -85,6 +85,8 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
                 .map(e -> addFigure(i.addAndGet(1),e)).collect(Collectors.toList()));
+        game.setFigures(figures.stream().map(Figure::getFigureId).toArray(Integer[]::new));
+        gameRepository.saveAndFlush(game);
     }
 
     private VerticalLayout printBoard(Color color) {
@@ -161,8 +163,10 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         cell.setOnClickListener(cell.addClickListener(event -> {
             if (cell.equals(event.getSource())) {
                 broadcasterService.getBroadcaster(game.getId()).broadcast(Pair.of(UI.getCurrent().getUIId(), cell.getKey()));
-                gameService.saveStep(game.getId(),
-                        playerColor, selectedFigure.getPosition().getKey(), cell.getKey(), selectedFigure.getFigureId());
+                gameService.saveStep(game,
+                        playerColor, selectedFigure.getPosition().getKey(),
+                        cell.getKey(), selectedFigure.getFigureId(),
+                        figures.stream().map(Figure::getFigureId).toArray(Integer[]::new));
             }
             selectedFigure.moveTo(cell);
             Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
@@ -279,6 +283,22 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void replaceFigures() {
+        drawNewGame();
+        Integer[] figuresFromDB = game.getFigures();
+        // remove eaten figures
+        figures.stream().filter(f -> Arrays.stream(figuresFromDB)
+                .noneMatch(id -> f.getFigureId().equals(id))).forEach(f -> {
+                    figures.remove(f);
+                    f.toDie();
+                });
+
+        // calculate last step for figures with did any moves and move to that cell
+        figures.stream().map(
+                f -> Pair.of(f, steps.stream()
+                        .filter(s -> s.getFigureId().equals(f.getFigureId()))
+                        .max(Comparator.comparing(Step::getGameId))))
+                .filter(p -> p.getRight().isPresent())
+                .forEach(p -> p.getLeft().moveTo(cells.get(new CellKey(p.getRight().get().getStepTo()))));
     }
 
     @Override
@@ -300,7 +320,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     @Override
     protected void onDetach(DetachEvent detachEvent) {
-        broadcasterRegistration.remove();
+        Optional.ofNullable(broadcasterRegistration).ifPresent(Registration::remove);
     }
 
     private void reverseBoard() {
