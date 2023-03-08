@@ -2,8 +2,10 @@ package com.ivpl.games.services;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.security.SecurityService;
+import com.ivpl.games.view.MainPage;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
+import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dialog.Dialog;
@@ -82,11 +84,23 @@ public class UIComponentsService {
     private ComponentEventListener<ClickEvent<Div>> newGameDialogListener(Dialog dialog, Color color) {
         return e-> {
             try {
-            dialog.close();
+                dialog.close();
                 gameService.newGame(securityService.getAuthenticatedUser(), color);
             } catch (AuthenticationException authenticationException) {
                 log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE);
             }
         };
+    }
+
+    public void showGameNotFoundMessage() {
+        Dialog dialog = new Dialog();
+        Button mainPageBtn = new Button("Go To Lobby", e -> {
+            UI.getCurrent().navigate(MainPage.class);
+            dialog.close();
+        });
+        dialog.getFooter().add(mainPageBtn);
+        dialog.add(new Text(GAME_NOT_FOUND_LABEL_STR));
+        UI.getCurrent().add(dialog);
+        dialog.open();
     }
 }

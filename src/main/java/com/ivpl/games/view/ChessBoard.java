@@ -3,8 +3,10 @@ package com.ivpl.games.view;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.*;
 import com.ivpl.games.entity.jpa.Game;
+import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.GameRepository;
+import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
@@ -51,6 +53,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private final transient GameRepository gameRepository;
     private final transient GameService gameService;
     private final transient SecurityService securityService;
+    private final transient StepRepository stepRepository;
     Registration broadcasterRegistration;
 
     private transient Game game;
@@ -63,18 +66,20 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private final List<Figure> figures = new ArrayList<>();
     private boolean isAnythingEaten;
     private VerticalLayout board;
+    private transient LinkedList<Step> steps;
 
     public ChessBoard(UIComponentsService uiComponentsService,
                       BroadcasterService broadcasterService,
-                      GameRepository gameRepository, GameService gameService, SecurityService securityService) {
+                      GameRepository gameRepository, GameService gameService, SecurityService securityService, StepRepository stepRepository) {
         this.uiComponentsService = uiComponentsService;
         this.broadcasterService = broadcasterService;
         this.gameRepository = gameRepository;
         this.gameService = gameService;
         this.securityService = securityService;
+        this.stepRepository = stepRepository;
     }
 
-    private void placeFigures() {
+    private void initiateFigures() {
         AtomicInteger i = new AtomicInteger();
         figures.addAll(cells.entrySet().stream()
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
@@ -108,7 +113,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void recalculatePossibleSteps() {
         cleanupCells();
-        figures.stream().filter(f -> currentTurn.equals(f.getColor()))
+        figures.stream().filter(f -> currentTurn.equals(f.getColor()) && currentTurn.equals(playerColor))
                 .forEach(f -> f.calculatePossibleSteps(cells));
 
         boolean haveToEatAnything = figures.stream()
@@ -159,7 +164,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 gameService.saveStep(game.getId(),
                         playerColor, selectedFigure.getPosition().getKey(), cell.getKey(), selectedFigure.getFigureId());
             }
-            selectedFigure.doStepTo(cell);
+            selectedFigure.moveTo(cell);
             Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
                     .ifPresent(f -> {
                         f.toDie();
@@ -260,7 +265,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
-        placeFigures();
+        initiateFigures();
         recalculatePossibleSteps();
     }
 
@@ -273,7 +278,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         removeAll();
     }
 
-    private void restoreGame(User user) {
+    private void replaceFigures() {
     }
 
     @Override
@@ -314,10 +319,14 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         Optional<Game> g = gameRepository.findById(Long.valueOf(gameId));
         if (g.isPresent()) {
             game = g.get();
+            steps = stepRepository.findAllByGameId(game.getId());
             recognizeUser();
-            drawNewGame();
+            if (!steps.isEmpty()) {
+                replaceFigures();
+            } else
+                drawNewGame();
         } else {
-            UI.getCurrent().navigate(MainPage.class);
+            uiComponentsService.showGameNotFoundMessage();
         }
     }
 

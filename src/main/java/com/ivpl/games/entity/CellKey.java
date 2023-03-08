@@ -34,7 +34,7 @@ public class CellKey implements Serializable {
         return Range.between(from, to).contains(x) && Range.between(from, to).contains(y);
     }
 
-    public int[] getAsArray() {
-        return new int[] {x, y};
+    public Integer[] getAsArray() {
+        return new Integer[] {x, y};
     }
 }

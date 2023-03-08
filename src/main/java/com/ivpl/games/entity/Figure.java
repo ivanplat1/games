@@ -77,7 +77,7 @@ public abstract class Figure extends Div {
     }
 
     @NonNull
-    public void doStepTo(Cell targetCell) {
+    public void moveTo(Cell targetCell) {
         position.removeFigure();
         targetCell.setFigure(this);
         position = targetCell;

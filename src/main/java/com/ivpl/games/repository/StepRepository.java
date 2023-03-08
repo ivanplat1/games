@@ -4,7 +4,10 @@ import com.ivpl.games.entity.jpa.Step;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.LinkedList;
+
 @Repository
 public interface StepRepository extends JpaRepository<Step, Long> {
 
+    LinkedList<Step> findAllByGameId(Long gameId);
 }
