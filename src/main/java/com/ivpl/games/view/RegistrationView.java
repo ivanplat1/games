@@ -11,12 +11,19 @@ import com.vaadin.flow.data.binder.ValidationException;
 import com.vaadin.flow.data.binder.ValidationResult;
 import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
+import com.vaadin.flow.shared.Registration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import static com.ivpl.games.constants.Constants.PASSWORD_VALIDATION_EXCEPTION_MESSAGE;
 
 @Route("registration")
 @AnonymousAllowed
 public class RegistrationView extends VerticalLayout {
+
+    private static final Logger log = LoggerFactory.getLogger(RegistrationView.class);
 
     private final transient UserRepository userRepository;
     private final transient BCryptPasswordEncoder passwordEncoder;
@@ -76,7 +83,7 @@ public class RegistrationView extends VerticalLayout {
                     userRepository.saveAndFlush(user);
                     showSuccess(user);
                 } catch (ValidationException e) {
-
+                    log.error(PASSWORD_VALIDATION_EXCEPTION_MESSAGE, e.getMessage());
                 }
             });
         }

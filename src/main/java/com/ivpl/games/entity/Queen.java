@@ -13,8 +13,8 @@ import static com.ivpl.games.constants.Constants.*;
 
 public class Queen extends Figure {
 
-    public Queen(Color color, Cell initPosition) {
-        super(color, initPosition);
+    public Queen(Integer id, Color color, Cell initPosition) {
+        super(id, color, initPosition);
     }
 
     @Override

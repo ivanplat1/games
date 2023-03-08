@@ -3,8 +3,10 @@ package com.ivpl.games.view;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.*;
 import com.ivpl.games.entity.jpa.Game;
+import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.security.SecurityService;
+import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
 import com.vaadin.flow.component.*;
@@ -15,7 +17,6 @@ import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
@@ -23,15 +24,16 @@ import com.vaadin.flow.shared.Registration;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.tomcat.websocket.AuthenticationException;
 
 import javax.annotation.security.PermitAll;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static com.ivpl.games.constants.Color.BLACK;
 import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
-import static com.ivpl.games.constants.GameStatus.WAITING_FOR_OPPONENT;
 
 @CssImport("./styles/styles.css")
 
@@ -47,12 +49,13 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private final transient UIComponentsService uiComponentsService;
     private final transient BroadcasterService broadcasterService;
     private final transient GameRepository gameRepository;
+    private final transient GameService gameService;
     private final transient SecurityService securityService;
     Registration broadcasterRegistration;
 
     private transient Game game;
     private Color playerColor;
-    private Long playerId;
+    private User player;
     private Color currentTurn = WHITE;
     private Div turnIndicator;
     private Figure selectedFigure;
@@ -63,18 +66,20 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     public ChessBoard(UIComponentsService uiComponentsService,
                       BroadcasterService broadcasterService,
-                      GameRepository gameRepository, SecurityService securityService) {
+                      GameRepository gameRepository, GameService gameService, SecurityService securityService) {
         this.uiComponentsService = uiComponentsService;
         this.broadcasterService = broadcasterService;
         this.gameRepository = gameRepository;
+        this.gameService = gameService;
         this.securityService = securityService;
     }
 
     private void placeFigures() {
+        AtomicInteger i = new AtomicInteger();
         figures.addAll(cells.entrySet().stream()
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
-                .map(this::addFigure).collect(Collectors.toList()));
+                .map(e -> addFigure(i.addAndGet(1),e)).collect(Collectors.toList()));
     }
 
     private VerticalLayout printBoard(Color color) {
@@ -115,8 +120,8 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                     .forEach(f -> f.getPossibleSteps().clear());
     }
 
-    private Figure addFigure(Map.Entry<CellKey, Cell> cellEntry) {
-        Figure f = new Checker(cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
+    private Figure addFigure(int id, Map.Entry<CellKey, Cell> cellEntry) {
+        Figure f = new Checker(id, cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
         cellEntry.getValue().setFigure(f);
         addFigureListener(f);
          return f;
@@ -131,7 +136,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             if (!f.equals(selectedFigure)) {
                 if (selectedFigure != null) {
                     selectedFigure.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                    selectedFigure.selectUnselectFigure();
+                    selectedFigure.unselectFigure();
                 }
 
                 f.getPossibleSteps().forEach(k -> {
@@ -149,8 +154,11 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void addCellListener(Cell cell) {
         cell.setOnClickListener(cell.addClickListener(event -> {
-            if (cell.equals(event.getSource()))
+            if (cell.equals(event.getSource())) {
                 broadcasterService.getBroadcaster(game.getId()).broadcast(Pair.of(UI.getCurrent().getUIId(), cell.getKey()));
+                gameService.saveStep(game.getId(),
+                        playerColor, selectedFigure.getPosition().getKey(), cell.getKey(), selectedFigure.getFigureId());
+            }
             selectedFigure.doStepTo(cell);
             Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
                     .ifPresent(f -> {
@@ -159,7 +167,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         isAnythingEaten = true;
             });
 
-            replaceWithQueenIfNeeded(cell, selectedFigure.getColor());
+            replaceWithQueenIfNeeded(cell, selectedFigure);
 
             if (isAnythingEaten) {
                 cleanupCells();
@@ -220,9 +228,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         return WHITE.equals(figureColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
     }
 
-    private void replaceWithQueenIfNeeded(Cell cell, Color figureColor) {
-        if (isBorderCell(cell.getKey(), figureColor)) {
-            Queen queen = new Queen(figureColor, cell);
+    private void replaceWithQueenIfNeeded(Cell cell, Figure figure) {
+        if (isBorderCell(cell.getKey(), figure.getColor())) {
+            Queen queen = new Queen(figure.getFigureId(), figure.getColor(), cell);
             addFigureListener(queen);
             cell.remove(selectedFigure);
             cell.setFigure(queen);
@@ -242,14 +250,14 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private Button createNewGameButton() {
-        return new Button(NEW_GAME_STR, e -> showSelectColorDialogForNewGame());
+        return new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
     }
 
-    private void newGame(Color color) {
+    private void drawNewGame() {
         removeAll();
         cleanUpVariables();
         add(uiComponentsService.getHeader());
-        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(color), createRightSidebar());
+        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
         placeFigures();
@@ -265,8 +273,12 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         removeAll();
     }
 
+    private void restoreGame(User user) {
+    }
+
     @Override
     protected void onAttach(AttachEvent attachEvent) {
+        if (game == null) return;
         UI ui = attachEvent.getUI();
         broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
             if (this.hashCode() != e.getLeft()) {
@@ -279,34 +291,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 });
             }
         });
-    }
-
-    private void showSelectColorDialogForNewGame() {
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle(COOSE_YOUR_COLOR_STR);
-        Div black = UIComponentsService.getTurnIndicator(BLACK);
-        black.addClickListener(e -> {
-            newGame(BLACK);
-            game.setColorPlayer1(BLACK);
-            game.setStatus(WAITING_FOR_OPPONENT);
-            gameRepository.saveAndFlush(game);
-            dialog.close();
-        });
-        Div white = UIComponentsService.getTurnIndicator(WHITE);
-        white.addClickListener(e -> {
-            newGame(WHITE);
-            game.setColorPlayer1(WHITE);
-            game.setStatus(WAITING_FOR_OPPONENT);
-            gameRepository.saveAndFlush(game);
-            dialog.close();
-        });
-        HorizontalLayout hLayout = new HorizontalLayout(white, black);
-        VerticalLayout dialogLayout = new VerticalLayout(hLayout);
-        dialogLayout.setAlignItems(FlexComponent.Alignment.CENTER);
-        dialogLayout.setClassName("general-text");
-        dialog.add(dialogLayout);
-        add(dialog);
-        dialog.open();
     }
 
     @Override
@@ -327,12 +311,24 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     @SneakyThrows
     @Override
     public void setParameter(BeforeEvent event, String gameId) {
-        game = gameRepository.findById(Long.valueOf(gameId))
-                .orElseThrow(() ->  new NotFoundException(String.format("Game with Id %s is was not found", gameId)));
-        if (game.getColorPlayer1() == null) {
-            showSelectColorDialogForNewGame();
-        } else if (game.getPlayer2Id() != null) {
-            newGame(game.getColorPlayer2());
+        Optional<Game> g = gameRepository.findById(Long.valueOf(gameId));
+        if (g.isPresent()) {
+            game = g.get();
+            recognizeUser();
+            drawNewGame();
+        } else {
+            UI.getCurrent().navigate(MainPage.class);
+        }
+    }
+
+    private void recognizeUser() throws AuthenticationException {
+        User user = securityService.getAuthenticatedUser();
+        if (user.getId().equals(game.getPlayer1Id())) {
+            player = user;
+            playerColor = game.getColorPlayer1();
+        } else if (user.getId().equals(game.getPlayer2Id())) {
+            player = user;
+            playerColor = game.getColorPlayer2();
         }
     }
 }

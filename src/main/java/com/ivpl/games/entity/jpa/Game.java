@@ -33,10 +33,12 @@ public class Game {
 
     protected Game() {}
 
-    public Game(Long player1Id, GameType type) {
+    public Game(Long player1Id, Color color, GameType type) {
         this.player1Id = player1Id;
+        this.colorPlayer1 = color;
         this.type = type;
-        this.status = GameStatus.SELECTING_COLOR;
+        this.status = GameStatus.WAITING_FOR_OPPONENT;
         this.startDate = new Timestamp(new Date().getTime());
+        this.stepCount = 0;
     }
 }

@@ -54,8 +54,7 @@ public class MainPage extends VerticalLayout {
         this.gameService = gameService;
         this.securityService = securityService;
         this.uiComponentsService = uiComponentsService;
-        add(uiComponentsService.getHeader());
-        add(getLobbyScreen());
+        add(uiComponentsService.getHeader(), getLobbyScreen());
     }
 
     private VerticalLayout getLobbyScreen() {
@@ -67,13 +66,7 @@ public class MainPage extends VerticalLayout {
     }
 
     private VerticalLayout getMenu() {
-        Button newGameBtn = new Button(NEW_GAME_STR, e -> {
-            try {
-                gameService.newGame(getCurrentUser());
-            } catch (AuthenticationException ex) {
-                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
-            }
-        });
+        Button newGameBtn = new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
         newGameBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         newGameBtn.setClassName("button");
         VerticalLayout vl = new VerticalLayout(newGameBtn);

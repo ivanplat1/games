@@ -6,6 +6,7 @@ import org.apache.commons.lang3.Range;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.sql.Array;
 
 @Getter
 @AllArgsConstructor
@@ -31,5 +32,9 @@ public class CellKey implements Serializable {
 
     public boolean inRange(int from, int to) {
         return Range.between(from, to).contains(x) && Range.between(from, to).contains(y);
+    }
+
+    public int[] getAsArray() {
+        return new int[] {x, y};
     }
 }

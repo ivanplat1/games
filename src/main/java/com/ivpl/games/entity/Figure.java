@@ -2,7 +2,6 @@ package com.ivpl.games.entity;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.utils.DirectionsForClassRepo;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.dom.Style;
@@ -10,7 +9,6 @@ import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
@@ -20,6 +18,7 @@ import static com.ivpl.games.constants.Constants.*;
 @Getter
 public abstract class Figure extends Div {
 
+    private final Integer figureId;
     private final Color color;
     @Getter
     private Cell position;
@@ -30,8 +29,8 @@ public abstract class Figure extends Div {
     private final LinkedList<CellKey> steps = new LinkedList<>();
     private boolean shouldStopCalculationForDirection;
 
-    @Autowired
-    protected Figure(Color color, Cell initPosition) {
+    protected Figure(Integer figureId, Color color, Cell initPosition) {
+        this.figureId = figureId;
         this.color = color;
         this.position = initPosition;
         add(getImage());
@@ -82,7 +81,7 @@ public abstract class Figure extends Div {
         position.removeFigure();
         targetCell.setFigure(this);
         position = targetCell;
-        selectUnselectFigure();
+        unselectFigure();
         steps.add(targetCell.getKey());
     }
 
@@ -91,10 +90,18 @@ public abstract class Figure extends Div {
     public void selectUnselectFigure() {
         Style style = getStyle();
         if (style.get(FILTER_PROP) == null) {
-            style.set(FILTER_PROP, "brightness(0.80)");
+            selectFigure();
         } else {
-            style.remove(FILTER_PROP);
+            unselectFigure();
         }
+    }
+
+    public void selectFigure() {
+        getStyle().set(FILTER_PROP, "brightness(0.80)");
+    }
+
+    public void unselectFigure() {
+        getStyle().remove(FILTER_PROP);
     }
 
     private Map<String, List<int[]>> getDirections() {

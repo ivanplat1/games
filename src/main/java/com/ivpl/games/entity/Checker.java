@@ -10,8 +10,8 @@ import static com.ivpl.games.constants.Constants.WHITE_CHECKER_IMG;
 
 public class Checker extends Figure {
 
-    public Checker(Color color, Cell initPosition) {
-        super(color, initPosition);
+    public Checker(Integer id, Color color, Cell initPosition) {
+        super(id, color, initPosition);
     }
 
     @Override
