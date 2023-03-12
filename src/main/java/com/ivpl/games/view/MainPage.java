@@ -1,5 +1,6 @@
 package com.ivpl.games.view;
 
+import com.ivpl.games.constants.ExceptionMessages;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.GameRepository;
@@ -160,7 +161,7 @@ public class MainPage extends VerticalLayout {
                 try {
                     getGameService().joinGame(game, getCurrentUser());
                 } catch (AuthenticationException ex) {
-                    log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE, ex);
+                    log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR, ex);
                 }
             });
         } else {

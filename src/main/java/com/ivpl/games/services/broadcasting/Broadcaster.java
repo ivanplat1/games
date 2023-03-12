@@ -5,14 +5,14 @@ import com.vaadin.flow.shared.Registration;
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public class Broadcaster {
     Executor executor = Executors.newSingleThreadExecutor();
-    LinkedList<Consumer<Integer>> listeners = new LinkedList<>();
+    LinkedList<IntConsumer> listeners = new LinkedList<>();
 
     public synchronized Registration register(
-            Consumer<Integer> listener) {
+            IntConsumer listener) {
         listeners.add(listener);
 
         return () -> {
@@ -23,7 +23,7 @@ public class Broadcaster {
     }
 
     public synchronized void broadcast(Integer message) {
-        for (Consumer<Integer> listener : listeners) {
+        for (IntConsumer listener : listeners) {
             executor.execute(() -> listener.accept(message));
         }
     }

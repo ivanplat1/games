@@ -10,8 +10,8 @@ import static com.ivpl.games.constants.Constants.WHITE_CHECKER_IMG;
 
 public class CheckerView extends PieceView {
 
-    public CheckerView(Integer id, Color color, Cell initPosition) {
-        super(id, color, initPosition);
+    public CheckerView(Long id, Long dbId, Color color, Cell initPosition) {
+        super(id, dbId, color, initPosition);
     }
 
     @Override

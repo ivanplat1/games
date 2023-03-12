@@ -5,7 +5,6 @@ import com.ivpl.games.constants.GameStatus;
 import com.ivpl.games.constants.GameType;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
 import java.sql.Timestamp;

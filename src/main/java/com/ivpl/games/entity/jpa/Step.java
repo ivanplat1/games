@@ -24,9 +24,9 @@ public class Step {
     @Column(columnDefinition = "int[]")
     @Type(type = "com.ivpl.games.converter.IntegerArrayType")
     private Integer[] stepTo;
-    private Integer pieceId;
+    private Long pieceId;
 
-    public Step(Long gameId, Integer gameStepId, Color playerColor, CellKey stepFrom, CellKey stepTo, Integer pieceId) {
+    public Step(Long gameId, Integer gameStepId, Color playerColor, CellKey stepFrom, CellKey stepTo, Long pieceId) {
         this.gameId = gameId;
         this.gameStepId = gameStepId;
         this.playerColor = playerColor;

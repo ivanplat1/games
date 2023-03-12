@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 @Service
 public class BroadcasterService {
 
     private final Map<Long, Broadcaster> broadcasters = new HashMap<>();
 
-    public Registration registerBroadcasterListener(Long gameId, Consumer<Integer> listener) {
+    public Registration registerBroadcasterListener(Long gameId, IntConsumer listener) {
         Optional<Broadcaster> broadcaster = Optional.ofNullable(broadcasters.get(gameId));
         return broadcaster.map(b -> b.register(listener))
                 .orElseGet(() -> {

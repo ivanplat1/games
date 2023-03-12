@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import static com.ivpl.games.constants.Constants.PASSWORD_VALIDATION_EXCEPTION_MESSAGE;
+import static com.ivpl.games.constants.ExceptionMessages.PASSWORD_VALIDATION_ERROR;
 
 @Route("registration")
 @AnonymousAllowed
@@ -80,7 +80,7 @@ public class RegistrationView extends VerticalLayout {
                     userRepository.saveAndFlush(user);
                     showSuccess(user);
                 } catch (ValidationException e) {
-                    log.error(PASSWORD_VALIDATION_EXCEPTION_MESSAGE, e.getMessage());
+                    log.error(PASSWORD_VALIDATION_ERROR, e.getMessage());
                 }
             });
         }

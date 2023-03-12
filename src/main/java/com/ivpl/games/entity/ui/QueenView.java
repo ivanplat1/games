@@ -13,8 +13,8 @@ import static com.ivpl.games.constants.Constants.*;
 
 public class QueenView extends PieceView {
 
-    public QueenView(Integer id, Color color, Cell initPosition) {
-        super(id, color, initPosition);
+    public QueenView(Long id, Long dbId, Color color, Cell initPosition) {
+        super(id, dbId, color, initPosition);
     }
 
     @Override

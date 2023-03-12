@@ -31,9 +31,6 @@ public final class Constants {
     public static final String ACTIVE_GAMES_HEADER_PLAYERS_STR = "Players";
     public static final String ACTIVE_GAMES_HEADER_GAME_STATUS_STR = "Game Status";
 
-    public static final String AUTHORIZATION_ERROR_EXCEPTION_MESSAGE = "Authorization error.";
-    public static final String PASSWORD_VALIDATION_EXCEPTION_MESSAGE = "Password validation error. {}";
-
     public static final String PLAYERS_CELL_HTML =
             "<vaadin-horizontal-layout style=\"align-items: center;\" theme=\"spacing\">"
             + "<vaadin-vertical-layout style=\"line-height: var(--lumo-line-height-m);\">"

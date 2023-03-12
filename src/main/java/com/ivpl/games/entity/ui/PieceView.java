@@ -1,6 +1,7 @@
 package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.services.GameService;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -18,7 +19,8 @@ import static com.ivpl.games.constants.Constants.*;
 @Getter
 public abstract class PieceView extends Div {
 
-    private final Integer pieceId;
+    private final Long pieceId;
+    private final Long dbId;
     private final Color color;
     @Getter
     private Cell position;
@@ -29,12 +31,12 @@ public abstract class PieceView extends Div {
     private final LinkedList<CellKey> steps = new LinkedList<>();
     private boolean shouldStopCalculationForDirection;
 
-    protected PieceView(Integer pieceId, Color color, Cell initPosition) {
+    protected PieceView(Long pieceId, Long dbId, Color color, Cell position) {
         this.pieceId = pieceId;
+        this.dbId = dbId;
         this.color = color;
-        this.position = initPosition;
+        this.position = position;
         add(getImage());
-        steps.addFirst(initPosition.getKey());
     }
 
     public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
@@ -77,12 +79,11 @@ public abstract class PieceView extends Div {
     }
 
     @NonNull
-    public void moveTo(Cell targetCell) {
+    public void placeAt(Cell targetCell) {
         position.removePiece();
-        targetCell.setPieceView(this);
+        targetCell.setPiece(this);
         position = targetCell;
         unselectPiece();
-        steps.add(targetCell.getKey());
     }
 
     protected abstract Image getImage();

@@ -38,9 +38,9 @@ public class Cell extends Div {
         setWidth("75px");
     }
 
-    public void setPieceView(PieceView pieceView) {
-        this.pieceView = pieceView;
-        add(pieceView);
+    public void setPiece(PieceView piece) {
+        this.pieceView = piece;
+        add(piece);
     }
 
     public void removePiece() {

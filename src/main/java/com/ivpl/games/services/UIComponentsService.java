@@ -1,6 +1,7 @@
 package com.ivpl.games.services;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.ExceptionMessages;
 import com.ivpl.games.constants.GameType;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.view.MainPage;
@@ -88,7 +89,7 @@ public class UIComponentsService {
                 dialog.close();
                 gameService.newGame(securityService.getAuthenticatedUser(), color, GameType.CHECKERS);
             } catch (AuthenticationException authenticationException) {
-                log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE);
+                log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR);
             }
         };
     }
