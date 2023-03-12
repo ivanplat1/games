@@ -41,12 +41,24 @@ public class UIComponentsService {
     }
 
     public VerticalLayout getHeader() {
-        VerticalLayout layout = new VerticalLayout(
-                new Button(LOGOUT_STR, click -> securityService.logout()));
+        VerticalLayout layout = new VerticalLayout(getLogoutButton());
         layout.setAlignItems(FlexComponent.Alignment.END);
         layout.setSpacing(false);
         layout.setPadding(false);
         return layout;
+    }
+
+    public VerticalLayout getHeaderWithGoToLobby() {
+        HorizontalLayout hl = new HorizontalLayout(getGoToLobbyButton(), getLogoutButton());
+        VerticalLayout layout = new VerticalLayout(hl);
+        layout.setAlignItems(FlexComponent.Alignment.END);
+        layout.setSpacing(false);
+        layout.setPadding(false);
+        return layout;
+    }
+
+    private Button getLogoutButton() {
+        return new Button(LOGOUT_STR, click -> securityService.logout());
     }
 
     public static Div getTurnIndicator(Color color) {
@@ -108,5 +120,9 @@ public class UIComponentsService {
             UI.getCurrent().navigate(MainPage.class);
             dialog.close();
         });
+    }
+
+    public Button getGoToLobbyButton() {
+        return new Button(GO_TO_LOBBY_STR, e -> UI.getCurrent().navigate(MainPage.class));
     }
 }

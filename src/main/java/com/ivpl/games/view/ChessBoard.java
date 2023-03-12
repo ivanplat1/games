@@ -133,7 +133,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void drawNewBoard() {
-        add(uiComponentsService.getHeader());
+        add(uiComponentsService.getHeaderWithGoToLobby());
         HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
