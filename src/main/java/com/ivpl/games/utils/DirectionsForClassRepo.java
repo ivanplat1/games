@@ -1,8 +1,8 @@
 package com.ivpl.games.utils;
 
-import com.ivpl.games.entity.Checker;
-import com.ivpl.games.entity.Figure;
-import com.ivpl.games.entity.Queen;
+import com.ivpl.games.entity.ui.CheckerView;
+import com.ivpl.games.entity.ui.PieceView;
+import com.ivpl.games.entity.ui.QueenView;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -13,18 +13,18 @@ public class DirectionsForClassRepo {
     static Map<Class<?>, Map<String, List<int[]>>> repository  = new HashMap<>();
 
     public DirectionsForClassRepo() {
-        repository.put(Checker.class, calculateDirections(1));
-        repository.put(Queen.class, calculateDirections(7));
+        repository.put(CheckerView.class, calculateDirections(1));
+        repository.put(QueenView.class, calculateDirections(7));
     }
 
-    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends Figure> clazz) {
+    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends PieceView> clazz) {
         return repository.get(clazz);
     }
 
-    public static List<int[]> getCertainDirectionForClass(Class<? extends Figure> clazz, String key) {
+    public static List<int[]> getCertainDirectionForClass(Class<? extends PieceView> clazz, String key) {
         return Optional.ofNullable(getDirectionsForClass(clazz)).map(ds -> ds.get(key))
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format("Directions are not implemented for Figure child class %s", clazz.getName())));
+                        String.format("Directions are not implemented for Item child class %s", clazz.getName())));
     }
 
     private Map<String, List<int[]>> calculateDirections(int range) {

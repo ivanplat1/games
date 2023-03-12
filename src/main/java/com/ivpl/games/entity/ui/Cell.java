@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.vaadin.flow.component.html.Div;
@@ -18,7 +18,7 @@ public class Cell extends Div {
 
     private final CellKey key;
     private final Color color;
-    private Figure figure = null;
+    private PieceView pieceView = null;
     @Setter
     private Registration onClickListener;
 
@@ -38,14 +38,14 @@ public class Cell extends Div {
         setWidth("75px");
     }
 
-    public void setFigure(Figure figure) {
-        this.figure = figure;
-        add(figure);
+    public void setPieceView(PieceView pieceView) {
+        this.pieceView = pieceView;
+        add(pieceView);
     }
 
-    public void removeFigure() {
-        remove(figure);
-        this.figure = null;
+    public void removePiece() {
+        remove(pieceView);
+        this.pieceView = null;
     }
 
     public void addSelectedStyle() {
@@ -57,7 +57,7 @@ public class Cell extends Div {
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
     }
 
-    public boolean hasFigure() {
-        return figure != null;
+    public boolean isOccupied() {
+        return pieceView != null;
     }
 }

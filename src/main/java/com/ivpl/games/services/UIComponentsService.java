@@ -1,6 +1,7 @@
 package com.ivpl.games.services;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.GameType;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.view.MainPage;
 import com.vaadin.flow.component.ClickEvent;
@@ -85,7 +86,7 @@ public class UIComponentsService {
         return e-> {
             try {
                 dialog.close();
-                gameService.newGame(securityService.getAuthenticatedUser(), color);
+                gameService.newGame(securityService.getAuthenticatedUser(), color, GameType.CHECKERS);
             } catch (AuthenticationException authenticationException) {
                 log.error(AUTHORIZATION_ERROR_EXCEPTION_MESSAGE);
             }

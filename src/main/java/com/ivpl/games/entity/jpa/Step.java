@@ -1,7 +1,7 @@
 package com.ivpl.games.entity.jpa;
 
 import com.ivpl.games.constants.Color;
-import com.ivpl.games.entity.CellKey;
+import com.ivpl.games.entity.ui.CellKey;
 import lombok.Getter;
 import org.hibernate.annotations.Type;
 
@@ -19,20 +19,20 @@ public class Step {
     private Long gameId;
     private Color playerColor;
     @Column(columnDefinition = "int[]")
-    @Type(type = "com.ivpl.games.entity.IntegerArrayType")
+    @Type(type = "com.ivpl.games.converter.IntegerArrayType")
     private Integer[] stepFrom;
     @Column(columnDefinition = "int[]")
-    @Type(type = "com.ivpl.games.entity.IntegerArrayType")
+    @Type(type = "com.ivpl.games.converter.IntegerArrayType")
     private Integer[] stepTo;
-    private Integer figureId;
+    private Integer pieceId;
 
-    public Step(Long gameId, Integer gameStepId, Color playerColor, CellKey stepFrom, CellKey stepTo, Integer figureId) {
+    public Step(Long gameId, Integer gameStepId, Color playerColor, CellKey stepFrom, CellKey stepTo, Integer pieceId) {
         this.gameId = gameId;
         this.gameStepId = gameStepId;
         this.playerColor = playerColor;
         this.stepFrom = stepFrom.getAsArray();
         this.stepTo = stepTo.getAsArray();
-        this.figureId = figureId;
+        this.pieceId = pieceId;
     }
 
     protected Step() {}

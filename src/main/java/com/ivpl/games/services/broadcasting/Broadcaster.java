@@ -1,8 +1,6 @@
 package com.ivpl.games.services.broadcasting;
 
-import com.ivpl.games.entity.CellKey;
 import com.vaadin.flow.shared.Registration;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.LinkedList;
 import java.util.concurrent.Executor;
@@ -11,10 +9,10 @@ import java.util.function.Consumer;
 
 public class Broadcaster {
     Executor executor = Executors.newSingleThreadExecutor();
-    LinkedList<Consumer<Pair<Integer, CellKey>>> listeners = new LinkedList<>();
+    LinkedList<Consumer<Integer>> listeners = new LinkedList<>();
 
     public synchronized Registration register(
-            Consumer<Pair<Integer, CellKey>> listener) {
+            Consumer<Integer> listener) {
         listeners.add(listener);
 
         return () -> {
@@ -24,8 +22,8 @@ public class Broadcaster {
         };
     }
 
-    public synchronized void broadcast(Pair<Integer, CellKey> message) {
-        for (Consumer<Pair<Integer, CellKey>> listener : listeners) {
+    public synchronized void broadcast(Integer message) {
+        for (Consumer<Integer> listener : listeners) {
             executor.execute(() -> listener.accept(message));
         }
     }

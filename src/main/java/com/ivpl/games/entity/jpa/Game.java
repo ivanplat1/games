@@ -27,9 +27,6 @@ public class Game {
     private GameType type;
     private GameStatus status;
     private Timestamp startDate;
-    @Column(columnDefinition = "int[]")
-    @Type(type = "com.ivpl.games.entity.IntegerArrayType")
-    private Integer[] figures;
     private Integer stepCount;
 
     protected Game() {}

@@ -9,5 +9,5 @@ import java.util.LinkedList;
 @Repository
 public interface StepRepository extends JpaRepository<Step, Long> {
 
-    LinkedList<Step> findAllByGameId(Long gameId);
+    LinkedList<Step> findAllByGameIdOrderByGameStepId(Long gameId);
 }

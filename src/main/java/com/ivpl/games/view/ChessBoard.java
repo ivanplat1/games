@@ -1,16 +1,17 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.Color;
-import com.ivpl.games.entity.*;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
+import com.ivpl.games.entity.ui.*;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
+import com.ivpl.games.utils.CommonUtils;
 import com.vaadin.flow.component.*;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.dependency.CssImport;
@@ -23,7 +24,6 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.shared.Registration;
-import lombok.SneakyThrows;
 import org.apache.commons.lang3.Range;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.tomcat.websocket.AuthenticationException;
@@ -59,11 +59,11 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private transient Game game;
     private Color playerColor;
     private User player;
-    private Color currentTurn = WHITE;
+    private Color currentTurn;
     private Div turnIndicator;
-    private Figure selectedFigure;
+    private PieceView selectedPiece;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
-    private final List<Figure> figures = new ArrayList<>();
+    private final List<PieceView> pieces = new ArrayList<>();
     private boolean isAnythingEaten;
     private VerticalLayout board;
     private transient LinkedList<Step> steps;
@@ -79,14 +79,12 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         this.stepRepository = stepRepository;
     }
 
-    private void initiateFigures() {
+    private void initiatePieces() {
         AtomicInteger i = new AtomicInteger();
-        figures.addAll(cells.entrySet().stream()
+        pieces.addAll(cells.entrySet().stream()
                 .filter(e -> BLACK.equals(e.getValue().getColor()))
                 .filter(e -> Range.between(1, 3).contains(e.getKey().getY()) || Range.between(6, 8).contains(e.getKey().getY()))
-                .map(e -> addFigure(i.addAndGet(1),e)).collect(Collectors.toList()));
-        game.setFigures(figures.stream().map(Figure::getFigureId).toArray(Integer[]::new));
-        gameRepository.saveAndFlush(game);
+                .map(e -> addPieces(i.addAndGet(1),e)).collect(Collectors.toList()));
     }
 
     private VerticalLayout printBoard(Color color) {
@@ -115,35 +113,33 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void recalculatePossibleSteps() {
         cleanupCells();
-        figures.stream().filter(f -> currentTurn.equals(f.getColor()) && currentTurn.equals(playerColor))
+        pieces.stream().filter(f -> currentTurn.equals(f.getColor()) && currentTurn.equals(playerColor))
                 .forEach(f -> f.calculatePossibleSteps(cells));
 
-        boolean haveToEatAnything = figures.stream()
+        boolean haveToEatAnything = pieces.stream()
                 .filter(f -> currentTurn.equals(f.getColor()))
-                .anyMatch(f -> !f.getFiguresToBeEaten().isEmpty());
+                .anyMatch(f -> !f.getPiecesToBeEaten().isEmpty());
 
         if (haveToEatAnything)
-            figures.stream().filter(f -> f.getFiguresToBeEaten().isEmpty())
+            pieces.stream().filter(f -> f.getPiecesToBeEaten().isEmpty())
                     .forEach(f -> f.getPossibleSteps().clear());
     }
 
-    private Figure addFigure(int id, Map.Entry<CellKey, Cell> cellEntry) {
-        Figure f = new Checker(id, cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
-        cellEntry.getValue().setFigure(f);
-        addFigureListener(f);
+    private PieceView addPieces(int id, Map.Entry<CellKey, Cell> cellEntry) {
+        PieceView f = new CheckerView(id, cellEntry.getKey().getY() < 5 ? BLACK : WHITE, cellEntry.getValue());
+        cellEntry.getValue().setPieceView(f);
+        addPieceListener(f);
          return f;
     }
 
-    private void addFigureListener(Figure f) {
+    private void addPieceListener(PieceView f) {
         f.setOnClickListener(f.addClickListener(e -> {
-            if (f.equals(e.getSource()))
-                broadcasterService.getBroadcaster(game.getId()).broadcast(Pair.of(this.hashCode(), f.getPosition().getKey()));
             if (f.getPossibleSteps().isEmpty() || !currentTurn.equals(f.getColor())) return;
-            f.selectUnselectFigure();
-            if (!f.equals(selectedFigure)) {
-                if (selectedFigure != null) {
-                    selectedFigure.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                    selectedFigure.unselectFigure();
+            f.selectUnselectPiece();
+            if (!f.equals(selectedPiece)) {
+                if (selectedPiece != null) {
+                    selectedPiece.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
+                    selectedPiece.unselectPiece();
                 }
 
                 f.getPossibleSteps().forEach(k -> {
@@ -151,67 +147,66 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                     cell.addSelectedStyle();
                     addCellListener(cell);
                 });
-                selectedFigure = f;
+                selectedPiece = f;
             } else {
                 f.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                selectedFigure = null;
+                selectedPiece = null;
             }
         }));
     }
 
     private void addCellListener(Cell cell) {
         cell.setOnClickListener(cell.addClickListener(event -> {
-            if (cell.equals(event.getSource())) {
-                broadcasterService.getBroadcaster(game.getId()).broadcast(Pair.of(UI.getCurrent().getUIId(), cell.getKey()));
-                gameService.saveStep(game,
-                        playerColor, selectedFigure.getPosition().getKey(),
-                        cell.getKey(), selectedFigure.getFigureId(),
-                        figures.stream().map(Figure::getFigureId).toArray(Integer[]::new));
-            }
-            selectedFigure.moveTo(cell);
-            Optional.ofNullable(selectedFigure.getFiguresToBeEaten().get(cell.getKey()))
+            Optional.ofNullable(selectedPiece.getPiecesToBeEaten().get(cell.getKey()))
                     .ifPresent(f -> {
                         f.toDie();
-                        figures.remove(f);
+                        pieces.remove(f);
                         isAnythingEaten = true;
             });
+            gameService.saveStep(game.getId(),
+                    playerColor, selectedPiece.getPosition().getKey(),
+                    cell.getKey(), selectedPiece.getPieceId());
 
-            replaceWithQueenIfNeeded(cell, selectedFigure);
+            selectedPiece.moveTo(cell);
+            replaceWithQueenIfNeeded(cell, selectedPiece);
 
             if (isAnythingEaten) {
                 cleanupCells();
-                selectedFigure.calculatePossibleSteps(cells);
+                selectedPiece.calculatePossibleSteps(cells);
                 // if still have anything to eat
-                if (!selectedFigure.getFiguresToBeEaten().isEmpty()) {
-                    selectedFigure = null;
+                if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
+                    selectedPiece = null;
                     return;
                 }
                 isAnythingEaten = false;
             }
             checkIsGameOver();
+            currentTurn = CommonUtils.getOppositeColor(currentTurn);
             revertTurn();
             recalculatePossibleSteps();
-            selectedFigure = null;
+            selectedPiece = null;
+
+            if (cell.equals(event.getSource())) {
+                broadcasterService.getBroadcaster(game.getId()).broadcast(UI.getCurrent().getUIId());
+            }
         }));
     }
 
     private void revertTurn() {
         if (WHITE.equals(currentTurn)) {
-            currentTurn = BLACK;
-            turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
-        } else {
-            currentTurn = WHITE;
             turnIndicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
+        } else {
+            turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
         }
     }
 
     private Div addTurnIndicator() {
-        turnIndicator = UIComponentsService.getTurnIndicator(WHITE);
+        turnIndicator = UIComponentsService.getTurnIndicator(currentTurn);
         return turnIndicator;
     }
 
     private void checkIsGameOver() {
-        Map<Color, List<Figure>> groupsByColor = figures.stream().collect(Collectors.groupingBy(Figure::getColor, Collectors.toList()));
+        Map<Color, List<PieceView>> groupsByColor = pieces.stream().collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
         if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
             gameOver();
     }
@@ -233,18 +228,18 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         cells.values().forEach(Cell::removeSelectedStyle);
     }
 
-    private boolean isBorderCell(CellKey cellKey, Color figureColor) {
-        return WHITE.equals(figureColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
+    private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
+        return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
     }
 
-    private void replaceWithQueenIfNeeded(Cell cell, Figure figure) {
-        if (isBorderCell(cell.getKey(), figure.getColor())) {
-            Queen queen = new Queen(figure.getFigureId(), figure.getColor(), cell);
-            addFigureListener(queen);
-            cell.remove(selectedFigure);
-            cell.setFigure(queen);
-            figures.remove(selectedFigure);
-            figures.add(queen);
+    private void replaceWithQueenIfNeeded(Cell cell, PieceView pieceView) {
+        if (isBorderCell(cell.getKey(), pieceView.getColor())) {
+            QueenView queenView = new QueenView(pieceView.getPieceId(), pieceView.getColor(), cell);
+            addPieceListener(queenView);
+            cell.remove(selectedPiece);
+            cell.setPieceView(queenView);
+            pieces.remove(selectedPiece);
+            pieces.add(queenView);
         }
     }
 
@@ -263,42 +258,39 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void drawNewGame() {
-        removeAll();
-        cleanUpVariables();
         add(uiComponentsService.getHeader());
         HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
-        initiateFigures();
+        //initiatePieces();
+    }
+
+    private void newGame() {
+        cleanUpAll();
+        drawNewGame();
+        gameRepository.saveAndFlush(game);
         recalculatePossibleSteps();
     }
 
-    private void cleanUpVariables() {
-        selectedFigure = null;
+    private void cleanUpAll() {
+        selectedPiece = null;
         currentTurn = WHITE;
         cells.clear();
-        figures.clear();
+        pieces.clear();
         isAnythingEaten = false;
+        steps = null;
         removeAll();
     }
 
-    private void replaceFigures() {
-        drawNewGame();
-        Integer[] figuresFromDB = game.getFigures();
-        // remove eaten figures
-        figures.stream().filter(f -> Arrays.stream(figuresFromDB)
-                .noneMatch(id -> f.getFigureId().equals(id))).forEach(f -> {
-                    figures.remove(f);
-                    f.toDie();
-                });
+    private void placePieces() {
 
-        // calculate last step for figures with did any moves and move to that cell
-        figures.stream().map(
+/*        pieces.stream().map(
                 f -> Pair.of(f, steps.stream()
-                        .filter(s -> s.getFigureId().equals(f.getFigureId()))
-                        .max(Comparator.comparing(Step::getGameId))))
+                        .filter(s -> s.getPieceId().equals(f.getPieceId()))
+                        .max(Comparator.comparing(Step::getGameStepId))))
                 .filter(p -> p.getRight().isPresent())
                 .forEach(p -> p.getLeft().moveTo(cells.get(new CellKey(p.getRight().get().getStepTo()))));
+        recalculatePossibleSteps();*/
     }
 
     @Override
@@ -306,15 +298,8 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         if (game == null) return;
         UI ui = attachEvent.getUI();
         broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
-            if (this.hashCode() != e.getLeft()) {
-                Optional.ofNullable(cells.get(e.getRight())).ifPresent(c -> {
-                    if (c.hasFigure()) {
-                        ui.access(() -> ComponentUtil.fireEvent(c.getFigure(), new ClickEvent<>(attachEvent.getSource())));
-                    } else {
-                        ui.access(() -> ComponentUtil.fireEvent(c, new ClickEvent<>(attachEvent.getSource())));
-                    }
-                });
-            }
+            if (this.hashCode() != e)
+                ui.access(this::refreshBoard);
         });
     }
 
@@ -333,21 +318,29 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         }
     }
 
-    @SneakyThrows
+/*    @SneakyThrows
     @Override
     public void setParameter(BeforeEvent event, String gameId) {
         Optional<Game> g = gameRepository.findById(Long.valueOf(gameId));
         if (g.isPresent()) {
             game = g.get();
-            steps = stepRepository.findAllByGameId(game.getId());
+            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
             recognizeUser();
             if (!steps.isEmpty()) {
-                replaceFigures();
-            } else
+                currentTurn = CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
                 drawNewGame();
+                replacePieces();
+            } else
+                newGame();
         } else {
             uiComponentsService.showGameNotFoundMessage();
         }
+    }*/
+
+
+    @Override
+    public void setParameter(BeforeEvent event, String gameId) {
+        restoreGame(gameId);
     }
 
     private void recognizeUser() throws AuthenticationException {
@@ -359,5 +352,36 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             player = user;
             playerColor = game.getColorPlayer2();
         }
+    }
+
+    private void refreshBoard() {
+        Optional<Game> g = gameRepository.findById(game.getId());
+        if (g.isPresent()) {
+            game = g.get();
+            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+            currentTurn = CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+            placePieces();
+            revertTurn();
+        }
+    }
+
+    private void restoreGame(String gameId) {
+        gameRepository.findById(Long.valueOf(gameId))
+                .ifPresentOrElse(g -> {
+                    try {
+                        game = g;
+                        steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+                        recognizeUser();
+                        currentTurn = steps.isEmpty() ? WHITE : CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+                        drawNewGame();
+                        placePieces();
+                    } catch (AuthenticationException e) {
+                        e.printStackTrace();
+                    }
+                }, uiComponentsService::showGameNotFoundMessage);
+    }
+
+    private void reloadPieces() {
+
     }
 }

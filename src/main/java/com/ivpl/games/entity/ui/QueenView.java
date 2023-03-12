@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.utils.DirectionsForClassRepo;
@@ -11,9 +11,9 @@ import java.util.stream.Collectors;
 import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
 
-public class Queen extends Figure {
+public class QueenView extends PieceView {
 
-    public Queen(Integer id, Color color, Cell initPosition) {
+    public QueenView(Integer id, Color color, Cell initPosition) {
         super(id, color, initPosition);
     }
 
@@ -33,7 +33,7 @@ public class Queen extends Figure {
                 .filter(c -> c.inRange(1, 8))
                 .map(k -> Optional.ofNullable(cells.get(k)))
                 .filter(Optional::isPresent).map(Optional::get)
-                .takeWhile(c -> !c.hasFigure())
+                .takeWhile(c -> !c.isOccupied())
                 .collect(Collectors.toList());
     }
 

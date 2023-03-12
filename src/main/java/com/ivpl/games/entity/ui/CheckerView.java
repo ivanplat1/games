@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.vaadin.flow.component.html.Image;
@@ -8,9 +8,9 @@ import java.util.*;
 import static com.ivpl.games.constants.Constants.BLACK_CHECKER_IMG;
 import static com.ivpl.games.constants.Constants.WHITE_CHECKER_IMG;
 
-public class Checker extends Figure {
+public class CheckerView extends PieceView {
 
-    public Checker(Integer id, Color color, Cell initPosition) {
+    public CheckerView(Integer id, Color color, Cell initPosition) {
         super(id, color, initPosition);
     }
 
@@ -24,7 +24,7 @@ public class Checker extends Figure {
         List<Cell> list = new ArrayList<>();
         CellKey key = new CellKey(sourceKey.getX()+(targetKey.getX()-sourceKey.getX())*2,
                 sourceKey.getY()+(targetKey.getY()- sourceKey.getY())*2);
-        Optional.ofNullable(cells.get(key)).filter(c -> !c.hasFigure()).ifPresent(list::add);
+        Optional.ofNullable(cells.get(key)).filter(c -> !c.isOccupied()).ifPresent(list::add);
         return list;
     }
 }

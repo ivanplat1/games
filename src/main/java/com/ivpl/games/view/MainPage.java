@@ -10,12 +10,14 @@ import com.ivpl.games.services.UIComponentsService;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.grid.GridSortOrder;
 import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.data.provider.SortDirection;
 import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.data.renderer.LitRenderer;
 import com.vaadin.flow.data.renderer.Renderer;
@@ -27,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.SimpleDateFormat;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Set;
@@ -80,7 +83,8 @@ public class MainPage extends VerticalLayout {
         activeGames.addColumn(createIdRenderer())
                 .setHeader(ACTIVE_GAMES_HEADER_ID_STR)
                 .setSortable(true).setWidth("10px")
-                .setComparator(Comparator.comparing(Game::getId));
+                .setComparator(Comparator.comparing(Game::getId))
+                .setKey(ACTIVE_GAMES_HEADER_ID_STR);
         activeGames.addColumn(createUsersRenderer())
                 .setHeader(ACTIVE_GAMES_HEADER_PLAYERS_STR);
         activeGames.addColumn(createStatusComponentRenderer())
@@ -99,6 +103,7 @@ public class MainPage extends VerticalLayout {
 
     private void refreshActiveGamesGrid(Grid<Game> grid) {
         grid.setItems(gameRepository.findAllByStatusIn(Set.of(SELECTING_COLOR, IN_PROGRESS, WAITING_FOR_OPPONENT)));
+        grid.sort(Collections.singletonList(new GridSortOrder<>(grid.getColumnByKey(ACTIVE_GAMES_HEADER_ID_STR), SortDirection.DESCENDING)));
     }
 
     private static ComponentRenderer<Span, Game> createStatusComponentRenderer() {

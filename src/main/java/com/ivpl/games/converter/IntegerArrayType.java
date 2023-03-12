@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.converter;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;

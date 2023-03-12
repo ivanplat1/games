@@ -1,8 +1,6 @@
 package com.ivpl.games.services.broadcasting;
 
-import com.ivpl.games.entity.CellKey;
 import com.vaadin.flow.shared.Registration;
-import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -15,7 +13,7 @@ public class BroadcasterService {
 
     private final Map<Long, Broadcaster> broadcasters = new HashMap<>();
 
-    public Registration registerBroadcasterListener(Long gameId, Consumer<Pair<Integer, CellKey>> listener) {
+    public Registration registerBroadcasterListener(Long gameId, Consumer<Integer> listener) {
         Optional<Broadcaster> broadcaster = Optional.ofNullable(broadcasters.get(gameId));
         return broadcaster.map(b -> b.register(listener))
                 .orElseGet(() -> {

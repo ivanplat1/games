@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.ui;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,7 +6,6 @@ import org.apache.commons.lang3.Range;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.sql.Array;
 
 @Getter
 @AllArgsConstructor

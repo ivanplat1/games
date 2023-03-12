@@ -1,4 +1,4 @@
-package com.ivpl.games.entity;
+package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.utils.DirectionsForClassRepo;
@@ -16,21 +16,21 @@ import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
 
 @Getter
-public abstract class Figure extends Div {
+public abstract class PieceView extends Div {
 
-    private final Integer figureId;
+    private final Integer pieceId;
     private final Color color;
     @Getter
     private Cell position;
     @Setter
     private Registration onClickListener;
-    private final Map<CellKey, Figure> figuresToBeEaten = new HashMap<>();
+    private final Map<CellKey, PieceView> piecesToBeEaten = new HashMap<>();
     private final Set<CellKey> possibleSteps = new HashSet<>();
     private final LinkedList<CellKey> steps = new LinkedList<>();
     private boolean shouldStopCalculationForDirection;
 
-    protected Figure(Integer figureId, Color color, Cell initPosition) {
-        this.figureId = figureId;
+    protected PieceView(Integer pieceId, Color color, Cell initPosition) {
+        this.pieceId = pieceId;
         this.color = color;
         this.position = initPosition;
         add(getImage());
@@ -39,7 +39,7 @@ public abstract class Figure extends Div {
 
     public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
         possibleSteps.clear();
-        figuresToBeEaten.clear();
+        piecesToBeEaten.clear();
         Set<CellKey> eatingCells = new HashSet<>();
         CellKey currentPosition = position.getKey();
         int currentX = currentPosition.getX();
@@ -53,16 +53,16 @@ public abstract class Figure extends Div {
                             .filter(c -> c.inRange(1, 8))
                             .map(k -> Optional.ofNullable(cells.get(k)))
                             .filter(Optional::isPresent).map(Optional::get)
-                            .takeWhile(c -> !c.hasFigure() || !getColor().equals(c.getFigure().getColor()))
+                            .takeWhile(c -> !c.isOccupied() || !getColor().equals(c.getPieceView().getColor()))
                             .forEach(targetCell -> {
-                                if (targetCell.hasFigure()) {
+                                if (targetCell.isOccupied()) {
                                     List<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
                                     cellsBehindTarget.forEach(c -> {
-                                        figuresToBeEaten.put(c.getKey(), targetCell.getFigure());
+                                        piecesToBeEaten.put(c.getKey(), targetCell.getPieceView());
                                         eatingCells.add(c.getKey());
                                         shouldStopCalculationForDirection = true;
                                     });
-                                } else if (getClass() == Queen.class || (WHITE.equals(color)
+                                } else if (getClass() == QueenView.class || (WHITE.equals(color)
                                         // filter out steps back
                                         ? currentPosition.getY() > targetCell.getKey().getY()
                                         : currentPosition.getY() < targetCell.getKey().getY()))
@@ -78,29 +78,29 @@ public abstract class Figure extends Div {
 
     @NonNull
     public void moveTo(Cell targetCell) {
-        position.removeFigure();
-        targetCell.setFigure(this);
+        position.removePiece();
+        targetCell.setPieceView(this);
         position = targetCell;
-        unselectFigure();
+        unselectPiece();
         steps.add(targetCell.getKey());
     }
 
     protected abstract Image getImage();
 
-    public void selectUnselectFigure() {
+    public void selectUnselectPiece() {
         Style style = getStyle();
         if (style.get(FILTER_PROP) == null) {
-            selectFigure();
+            selectPiece();
         } else {
-            unselectFigure();
+            unselectPiece();
         }
     }
 
-    public void selectFigure() {
+    public void selectPiece() {
         getStyle().set(FILTER_PROP, "brightness(0.80)");
     }
 
-    public void unselectFigure() {
+    public void unselectPiece() {
         getStyle().remove(FILTER_PROP);
     }
 
@@ -112,7 +112,7 @@ public abstract class Figure extends Div {
     protected abstract List<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);
 
     public void toDie() {
-        position.removeFigure();
+        position.removePiece();
         position = null;
     }
 }
