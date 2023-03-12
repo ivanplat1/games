@@ -64,13 +64,15 @@ public class GameService {
         UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
     }
 
-    public void saveStep(@NonNull Game game,
+    public void saveStep(Long gameId,
                          Color playerColor,
                          CellKey from,
                          CellKey to,
                          Long pieceId,
                          boolean changeColor) {
-        Step step = new Step(game.getId(), increaseStepCount(game), playerColor, from, to, pieceId);
+        Game game = gameRepository.findById(gameId)
+                .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
+        Step step = new Step(gameId, increaseStepCount(game), playerColor, from, to, pieceId);
         stepRepository.saveAndFlush(step);
         Piece piece = pieceRepository.findPieceById(pieceId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));

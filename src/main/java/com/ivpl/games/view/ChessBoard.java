@@ -117,6 +117,21 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 }, uiComponentsService::showGameNotFoundMessage);
     }
 
+    private void refreshBoard() {
+        gameRepository.findById(game.getId()).ifPresent(g ->
+        {
+            if (g.getWinner() != null) gameOver();
+
+            cleanUpAll();
+            game = g;
+            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+            currentTurn = game.getTurn();
+            drawNewBoard();
+            reloadAndPlacePieces();
+            recalculatePossibleSteps();
+        });
+    }
+
     private void drawNewBoard() {
         add(uiComponentsService.getHeader());
         HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
@@ -185,19 +200,19 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         Map<Color, List<PieceView>> groupsByColor = pieces.stream()
                 .filter(p -> p.getPosition() != null)
                 .collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
-        if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
+        if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK)) {
+            gameService.finishGame(game, currentTurn);
             gameOver();
+        }
     }
 
     private void gameOver() {
-        gameService.finishGame(game, currentTurn);
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Game Over");
         VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
         dialogLayout.setAlignItems(Alignment.CENTER);
-        dialogLayout.setClassName("general-text");
         Button okButton = new Button("OK", e -> dialog.close());
-        dialog.getFooter().add(createNewGameButton(), okButton);
+        dialog.getFooter().add(okButton);
         dialog.add(dialogLayout);
         add(dialog);
         dialog.open();
@@ -209,6 +224,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             addPieceListener(queenView);
             cell.remove(selectedPiece);
             cell.setPiece(queenView);
+            selectedPiece = queenView;
             gameService.mutatePiece(piece.getDbId(), PieceType.QUEEN);
         }
     }
@@ -221,10 +237,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         menuLayout.setPadding(false);
         menuLayout.setSpacing(false);
         return new VerticalLayout(indicatorLayout, menuLayout);
-    }
-
-    private Button createNewGameButton() {
-        return new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
     }
 
     private void reverseBoard() {
@@ -244,19 +256,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         } else if (user.getId().equals(game.getPlayer2Id())) {
             playerColor = game.getColorPlayer2();
         }
-    }
-
-    private void refreshBoard() {
-        gameRepository.findById(game.getId()).ifPresent(g ->
-        {
-            cleanUpAll();
-            game = g;
-            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-            currentTurn = game.getTurn();
-            drawNewBoard();
-            reloadAndPlacePieces();
-            recalculatePossibleSteps();
-        });
     }
 
     private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
@@ -319,7 +318,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 selectedPiece.calculatePossibleSteps(cells);
                 // if still have anything to eat
                 if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
-                    gameService.saveStep(game,
+                    gameService.saveStep(game.getId(),
                             playerColor, selectedPiece.getPosition().getKey(),
                             cell.getKey(), selectedPiece.getDbId(), false);
                     selectedPiece = null;
@@ -330,7 +329,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 }
                 isAnythingEaten = false;
             }
-            gameService.saveStep(game,
+            gameService.saveStep(game.getId(),
                     playerColor, selectedPiece.getPosition().getKey(),
                     cell.getKey(), selectedPiece.getDbId(), true);
             checkIsGameOver();

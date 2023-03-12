@@ -6,9 +6,9 @@ import java.util.Map;
 public class PiecesInitPositions {
 
     public static final Map<Long, Integer[]> checkersInitPositions = Map.ofEntries(
-            new AbstractMap.SimpleEntry<>(16L, new Integer[]{7, 2}),
-            new AbstractMap.SimpleEntry<>(1L, new Integer[]{3, 2}),
-            new AbstractMap.SimpleEntry<>(2L, new Integer[]{5, 6})
+            new AbstractMap.SimpleEntry<>(16L, new Integer[]{8, 3}),
+            new AbstractMap.SimpleEntry<>(1L, new Integer[]{7, 2}),
+            new AbstractMap.SimpleEntry<>(2L, new Integer[]{4, 3})
     );
 
     /*public static final Map<Long, Integer[]> checkersInitPositions = Map.ofEntries(
