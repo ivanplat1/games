@@ -211,7 +211,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         dialog.setHeaderTitle("Game Over");
         VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
         dialogLayout.setAlignItems(Alignment.CENTER);
-        Button okButton = new Button("OK", e -> dialog.close());
+        Button okButton = uiComponentsService.getGoToLobbyButtonForDialog(dialog);
         dialog.getFooter().add(okButton);
         dialog.add(dialogLayout);
         add(dialog);

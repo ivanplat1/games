@@ -22,10 +22,8 @@ public final class Constants {
     public static final String JOIN_GAME_OR_START_NEW_STR = "Choose a game to fight or start a new one";
     public static final String NEW_GAME_STR = "New Game";
     public static final String COOSE_YOUR_COLOR_STR = "Chose Your Color";
-    public static final String GAME_NOT_FOUND_TITLE_STR = "Game Not Found";
     public static final String GAME_NOT_FOUND_LABEL_STR = "Game not found or finished.";
-    public static final String COLOR_STR = "color";
-    public static final String GAME_ID_STR = "gameId";
+    public static final String GO_TO_LOBBY_STR = "Go To Lobby";
 
     public static final String ACTIVE_GAMES_HEADER_ID_STR = "ID";
     public static final String ACTIVE_GAMES_HEADER_PLAYERS_STR = "Players";

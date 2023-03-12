@@ -96,13 +96,17 @@ public class UIComponentsService {
 
     public void showGameNotFoundMessage() {
         Dialog dialog = new Dialog();
-        Button mainPageBtn = new Button("Go To Lobby", e -> {
-            UI.getCurrent().navigate(MainPage.class);
-            dialog.close();
-        });
+        Button mainPageBtn = getGoToLobbyButtonForDialog(dialog);
         dialog.getFooter().add(mainPageBtn);
         dialog.add(new Text(GAME_NOT_FOUND_LABEL_STR));
         UI.getCurrent().add(dialog);
         dialog.open();
+    }
+
+    public Button getGoToLobbyButtonForDialog(Dialog dialog) {
+        return new Button(GO_TO_LOBBY_STR, e -> {
+            UI.getCurrent().navigate(MainPage.class);
+            dialog.close();
+        });
     }
 }
