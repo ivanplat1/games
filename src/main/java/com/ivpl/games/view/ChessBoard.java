@@ -79,6 +79,69 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         this.stepRepository = stepRepository;
     }
 
+    @Override
+    protected void onAttach(AttachEvent attachEvent) {
+        if (game == null) return;
+        UI ui = attachEvent.getUI();
+        broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
+            if (this.hashCode() != e)
+                ui.access(this::refreshBoard);
+        });
+    }
+
+    @Override
+    protected void onDetach(DetachEvent detachEvent) {
+        Optional.ofNullable(broadcasterRegistration).ifPresent(Registration::remove);
+    }
+
+    @Override
+    public void setParameter(BeforeEvent event, String gameId) {
+        restoreGame(Long.valueOf(gameId));
+    }
+
+    private void restoreGame(Long gameId) {
+        gameRepository.findById(gameId)
+                .ifPresentOrElse(g -> {
+                    try {
+                        game = g;
+                        steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+                        recognizeUser();
+                        currentTurn = steps.isEmpty() ? WHITE : CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+                        drawNewBoard();
+                        reloadAndPlacePieces();
+                        recalculatePossibleSteps();
+                    } catch (AuthenticationException e) {
+                        e.printStackTrace();
+                    }
+                }, uiComponentsService::showGameNotFoundMessage);
+    }
+
+    private void drawNewBoard() {
+        add(uiComponentsService.getHeader());
+        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
+        mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        add(mainLayout);
+    }
+
+    private void cleanUpAll() {
+        selectedPiece = null;
+        currentTurn = WHITE;
+        cells.clear();
+        isAnythingEaten = false;
+        steps = null;
+        removeAll();
+    }
+
+    private void reloadAndPlacePieces() {
+        pieces.clear();
+        pieces.addAll(gameService.loadPieceViewsForGame(game.getId(), cells));
+        pieces.stream().filter(p -> p.getPosition() != null)
+                .forEach(p -> {
+                    p.getPosition().setPiece(p);
+                    addPieceListener(p);
+                });
+    }
+
     private VerticalLayout printBoard(Color color) {
         board = new VerticalLayout();
         board.setSpacing(false);
@@ -104,7 +167,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void recalculatePossibleSteps() {
-        cleanupCells();
+        removeCellsHighlights();
         pieces.stream()
                 .filter(p -> p.getPosition() != null && currentTurn.equals(p.getColor()) && currentTurn.equals(playerColor))
                 .forEach(p -> p.calculatePossibleSteps(cells));
@@ -116,6 +179,101 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         if (haveToEatAnything)
             pieces.stream().filter(f -> f.getPiecesToBeEaten().isEmpty())
                     .forEach(f -> f.getPossibleSteps().clear());
+    }
+
+    private void checkIsGameOver() {
+        Map<Color, List<PieceView>> groupsByColor = pieces.stream().collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
+        if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
+            gameOver();
+    }
+
+    private void gameOver() {
+        Dialog dialog = new Dialog();
+        dialog.setHeaderTitle("Game Over");
+        VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
+        dialogLayout.setAlignItems(Alignment.CENTER);
+        dialogLayout.setClassName("general-text");
+        Button okButton = new Button("OK", e -> dialog.close());
+        dialog.getFooter().add(createNewGameButton(), okButton);
+        dialog.add(dialogLayout);
+        add(dialog);
+        dialog.open();
+    }
+
+    private void replaceWithQueenIfNeeded(Cell cell, PieceView pieceView) {
+        if (isBorderCell(cell.getKey(), pieceView.getColor())) {
+            QueenView queenView = new QueenView(pieceView.getPieceId(), pieceView.getDbId(), pieceView.getColor(), cell);
+            addPieceListener(queenView);
+            cell.remove(selectedPiece);
+            cell.setPiece(queenView);
+        }
+    }
+
+    private VerticalLayout createRightSidebar() {
+        Button inverseBtn = new Button(new Icon(VaadinIcon.REFRESH), e -> reverseBoard());
+        HorizontalLayout indicatorLayout = new HorizontalLayout(inverseBtn, addTurnIndicator());
+        indicatorLayout.setAlignItems(Alignment.CENTER);
+        HorizontalLayout menuLayout = new HorizontalLayout();
+        menuLayout.setPadding(false);
+        menuLayout.setSpacing(false);
+        return new VerticalLayout(indicatorLayout, menuLayout);
+    }
+
+    private Button createNewGameButton() {
+        return new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
+    }
+
+    private void reverseBoard() {
+        if (CHESS_BOARD_WHITES_STYLE.equals(board.getClassName())) {
+            board.setClassName(CHESS_BOARD_BLACKS_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_BLACKS_STYLE));
+        } else {
+            board.setClassName(CHESS_BOARD_WHITES_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_WHITES_STYLE));
+        }
+    }
+
+    private void recognizeUser() throws AuthenticationException {
+        User user = securityService.getAuthenticatedUser();
+        if (user.getId().equals(game.getPlayer1Id())) {
+            playerColor = game.getColorPlayer1();
+        } else if (user.getId().equals(game.getPlayer2Id())) {
+            playerColor = game.getColorPlayer2();
+        }
+    }
+
+    private void refreshBoard() {
+        gameRepository.findById(game.getId()).ifPresent(g ->
+        {
+            cleanUpAll();
+            game = g;
+            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+            currentTurn = CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+            drawNewBoard();
+            reloadAndPlacePieces();
+            recalculatePossibleSteps();
+        });
+    }
+
+    private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
+        return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
+    }
+
+    private void removeCellsHighlights() {
+        cells.values().forEach(Cell::removeSelectedStyle);
+    }
+
+    private void revertTurn() {
+        if (WHITE.equals(currentTurn)) {
+            turnIndicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
+        } else {
+            turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
+        }
+    }
+
+    private Div addTurnIndicator() {
+        turnIndicator = UIComponentsService.getTurnIndicator(currentTurn);
+        return turnIndicator;
     }
 
     private void addPieceListener(PieceView p) {
@@ -148,7 +306,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         f.toDie();
                         gameService.killPiece(f.getDbId());
                         isAnythingEaten = true;
-            });
+                    });
             gameService.saveStep(game.getId(),
                     playerColor, selectedPiece.getPosition().getKey(),
                     cell.getKey(), selectedPiece.getDbId());
@@ -157,7 +315,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             replaceWithQueenIfNeeded(cell, selectedPiece);
 
             if (isAnythingEaten) {
-                cleanupCells();
+                removeCellsHighlights();
                 selectedPiece.calculatePossibleSteps(cells);
                 // if still have anything to eat
                 if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
@@ -176,165 +334,5 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
             }
         }));
-    }
-
-    private void revertTurn() {
-        if (WHITE.equals(currentTurn)) {
-            turnIndicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
-        } else {
-            turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
-        }
-    }
-
-    private Div addTurnIndicator() {
-        turnIndicator = UIComponentsService.getTurnIndicator(currentTurn);
-        return turnIndicator;
-    }
-
-    private void checkIsGameOver() {
-        Map<Color, List<PieceView>> groupsByColor = pieces.stream().collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
-        if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
-            gameOver();
-    }
-
-    private void gameOver() {
-        Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Game Over");
-        VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
-        dialogLayout.setAlignItems(Alignment.CENTER);
-        dialogLayout.setClassName("general-text");
-        Button okButton = new Button("OK", e -> dialog.close());
-        dialog.getFooter().add(createNewGameButton(), okButton);
-        dialog.add(dialogLayout);
-        add(dialog);
-        dialog.open();
-    }
-
-    private void cleanupCells() {
-        cells.values().forEach(Cell::removeSelectedStyle);
-    }
-
-    private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
-        return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
-    }
-
-    private void replaceWithQueenIfNeeded(Cell cell, PieceView pieceView) {
-        if (isBorderCell(cell.getKey(), pieceView.getColor())) {
-            QueenView queenView = new QueenView(pieceView.getPieceId(), pieceView.getDbId(), pieceView.getColor(), cell);
-            addPieceListener(queenView);
-            cell.remove(selectedPiece);
-            cell.setPiece(queenView);
-            pieces.remove(selectedPiece);
-            pieces.add(queenView);
-        }
-    }
-
-    private VerticalLayout createRightSidebar() {
-        Button inverseBtn = new Button(new Icon(VaadinIcon.REFRESH), e -> reverseBoard());
-        HorizontalLayout indicatorLayout = new HorizontalLayout(inverseBtn, addTurnIndicator());
-        indicatorLayout.setAlignItems(Alignment.CENTER);
-        HorizontalLayout menuLayout = new HorizontalLayout();
-        menuLayout.setPadding(false);
-        menuLayout.setSpacing(false);
-        return new VerticalLayout(indicatorLayout, menuLayout);
-    }
-
-    private Button createNewGameButton() {
-        return new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
-    }
-
-    private void drawNewBoard() {
-        add(uiComponentsService.getHeader());
-        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
-        mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-        add(mainLayout);
-    }
-
-    private void cleanUpAll() {
-        selectedPiece = null;
-        currentTurn = WHITE;
-        cells.clear();
-        isAnythingEaten = false;
-        steps = null;
-        removeAll();
-    }
-
-    private void reloadAndPlacePieces() {
-        pieces.clear();
-        pieces.addAll(gameService.loadPieceViewsForGame(game.getId(), cells));
-        pieces.stream().filter(p -> p.getPosition() != null)
-                .forEach(p -> {
-                    p.getPosition().setPiece(p);
-                    addPieceListener(p);
-        });
-    }
-
-    @Override
-    protected void onAttach(AttachEvent attachEvent) {
-        if (game == null) return;
-        UI ui = attachEvent.getUI();
-        broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
-            if (this.hashCode() != e)
-                ui.access(this::refreshBoard);
-        });
-    }
-
-    @Override
-    protected void onDetach(DetachEvent detachEvent) {
-        Optional.ofNullable(broadcasterRegistration).ifPresent(Registration::remove);
-    }
-
-    private void reverseBoard() {
-        if (CHESS_BOARD_WHITES_STYLE.equals(board.getClassName())) {
-            board.setClassName(CHESS_BOARD_BLACKS_STYLE);
-            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_BLACKS_STYLE));
-        } else {
-            board.setClassName(CHESS_BOARD_WHITES_STYLE);
-            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_WHITES_STYLE));
-        }
-    }
-
-    @Override
-    public void setParameter(BeforeEvent event, String gameId) {
-        restoreGame(Long.valueOf(gameId));
-    }
-
-    private void recognizeUser() throws AuthenticationException {
-        User user = securityService.getAuthenticatedUser();
-        if (user.getId().equals(game.getPlayer1Id())) {
-            playerColor = game.getColorPlayer1();
-        } else if (user.getId().equals(game.getPlayer2Id())) {
-            playerColor = game.getColorPlayer2();
-        }
-    }
-
-    private void refreshBoard() {
-        gameRepository.findById(game.getId()).ifPresent(g ->
-        {
-            cleanUpAll();
-            game = g;
-            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-            currentTurn = CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
-            drawNewBoard();
-            reloadAndPlacePieces();
-            recalculatePossibleSteps();
-        });
-    }
-
-    private void restoreGame(Long gameId) {
-        gameRepository.findById(gameId)
-                .ifPresentOrElse(g -> {
-                    try {
-                        game = g;
-                        steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-                        recognizeUser();
-                        currentTurn = steps.isEmpty() ? WHITE : CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
-                        drawNewBoard();
-                        reloadAndPlacePieces();
-                        recalculatePossibleSteps();
-                    } catch (AuthenticationException e) {
-                        e.printStackTrace();
-                    }
-                }, uiComponentsService::showGameNotFoundMessage);
     }
 }
