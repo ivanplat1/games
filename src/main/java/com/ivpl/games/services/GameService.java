@@ -15,7 +15,6 @@ import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.utils.CommonUtils;
 import com.ivpl.games.view.ChessBoard;
 import com.vaadin.flow.component.UI;
-import com.vaadin.flow.router.NotFoundException;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

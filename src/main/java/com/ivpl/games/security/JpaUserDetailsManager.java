@@ -54,7 +54,6 @@ public class JpaUserDetailsManager implements UserDetailsManager {
     @Override
     @Transactional
     public void changePassword(String oldPassword, String newPassword) {
-        // TODO change password is not implemented yet
     }
 
     @Override
