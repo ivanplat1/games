@@ -8,6 +8,7 @@ import com.ivpl.games.repository.UserRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.grid.Grid;
@@ -150,9 +151,23 @@ public class MainPage extends VerticalLayout {
     private final SerializableBiConsumer<Button, Game> actionComponentUpdater = (
             button, game) -> {
         if (IN_PROGRESS.equals(game.getStatus())) {
-            button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-            button.setIcon(new Icon(VaadinIcon.EYE));
-            button.setTooltipText("Spectate");
+            try {
+                button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+                if (getCurrentUser().getId().equals(game.getPlayer1Id())
+                        || getCurrentUser().getId().equals(game.getPlayer2Id())) {
+                    button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+                    button.setIcon(new Icon(VaadinIcon.ARROW_FORWARD));
+                    button.setTooltipText("Get Back to Game");
+                    button.addClickListener(
+                            e -> UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId())));
+                } else {
+
+                    button.setIcon(new Icon(VaadinIcon.EYE));
+                    button.setTooltipText("Spectate");
+                }
+            } catch (AuthenticationException e) {
+                e.printStackTrace();
+            }
         } else if (WAITING_FOR_OPPONENT.equals(game.getStatus())) {
             button.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
             button.setIcon(new Icon(VaadinIcon.SWORD));
