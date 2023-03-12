@@ -158,15 +158,12 @@ public class MainPage extends VerticalLayout {
                     button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
                     button.setIcon(new Icon(VaadinIcon.ARROW_FORWARD));
                     button.setTooltipText("Get Back to Game");
-                    button.addClickListener(
-                            e -> UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId())));
                 } else {
-
                     button.setIcon(new Icon(VaadinIcon.EYE));
                     button.setTooltipText("Spectate");
-                    button.addClickListener(
-                            e -> UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId())));
                 }
+                button.addClickListener(
+                        e -> UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId())));
             } catch (AuthenticationException e) {
                 e.printStackTrace();
             }
