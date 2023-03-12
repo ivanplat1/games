@@ -64,17 +64,20 @@ public class GameService {
         UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
     }
 
-    public void saveStep(Long gameId,
+    public void saveStep(@NonNull Game game,
                          Color playerColor,
                          CellKey from,
                          CellKey to,
-                         Long pieceId) {
-        Step step = new Step(gameId, increaseStepCount(gameId), playerColor, from, to, pieceId);
+                         Long pieceId,
+                         boolean changeColor) {
+        Step step = new Step(game.getId(), increaseStepCount(game), playerColor, from, to, pieceId);
         stepRepository.saveAndFlush(step);
         Piece piece = pieceRepository.findPieceById(pieceId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));
         piece.setPosition(to.getAsArray());
         pieceRepository.saveAndFlush(piece);
+        if (changeColor) game.setTurn(CommonUtils.getOppositeColor(game.getTurn()));
+        gameRepository.saveAndFlush(game);
     }
 
     public List<PieceView> loadPieceViewsForGame(Long gameId, Map<CellKey, Cell> cells) {
@@ -83,9 +86,7 @@ public class GameService {
                 .collect(Collectors.toList());
     }
 
-    private Integer increaseStepCount(Long gameId) {
-        Game game = gameRepository.findById(gameId)
-                .orElseThrow(() ->  new NotFoundException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
+    private Integer increaseStepCount(Game game) {
         game.setStepCount(game.getStepCount()+1);
         gameRepository.saveAndFlush(game);
         return game.getStepCount();
@@ -116,5 +117,11 @@ public class GameService {
                 .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));
         piece.setType(newType);
         pieceRepository.saveAndFlush(piece);
+    }
+
+    public void finishGame(Game game, Color winner) {
+        game.setWinner(winner);
+        game.setStatus(GameStatus.FINISHED);
+        gameRepository.saveAndFlush(game);
     }
 }

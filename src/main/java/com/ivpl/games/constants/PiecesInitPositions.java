@@ -6,6 +6,12 @@ import java.util.Map;
 public class PiecesInitPositions {
 
     public static final Map<Long, Integer[]> checkersInitPositions = Map.ofEntries(
+            new AbstractMap.SimpleEntry<>(16L, new Integer[]{7, 2}),
+            new AbstractMap.SimpleEntry<>(1L, new Integer[]{3, 2}),
+            new AbstractMap.SimpleEntry<>(2L, new Integer[]{5, 6})
+    );
+
+    /*public static final Map<Long, Integer[]> checkersInitPositions = Map.ofEntries(
             new AbstractMap.SimpleEntry<>(1L, new Integer[]{2, 1}),
             new AbstractMap.SimpleEntry<>(2L, new Integer[]{4, 1}),
             new AbstractMap.SimpleEntry<>(3L, new Integer[]{6, 1}),
@@ -30,7 +36,7 @@ public class PiecesInitPositions {
             new AbstractMap.SimpleEntry<>(22L, new Integer[]{3, 8}),
             new AbstractMap.SimpleEntry<>(23L, new Integer[]{5, 8}),
             new AbstractMap.SimpleEntry<>(24L, new Integer[]{7, 8})
-    );
+    );*/
 
     private PiecesInitPositions() {
 

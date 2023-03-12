@@ -101,12 +101,13 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void restoreGame(Long gameId) {
         gameRepository.findById(gameId)
+                .filter(Game::isActive)
                 .ifPresentOrElse(g -> {
                     try {
                         game = g;
                         steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
                         recognizeUser();
-                        currentTurn = steps.isEmpty() ? WHITE : CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+                        currentTurn = game.getTurn();
                         drawNewBoard();
                         reloadAndPlacePieces();
                         recalculatePossibleSteps();
@@ -125,7 +126,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void cleanUpAll() {
         selectedPiece = null;
-        currentTurn = WHITE;
         cells.clear();
         isAnythingEaten = false;
         steps = null;
@@ -182,12 +182,15 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void checkIsGameOver() {
-        Map<Color, List<PieceView>> groupsByColor = pieces.stream().collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
+        Map<Color, List<PieceView>> groupsByColor = pieces.stream()
+                .filter(p -> p.getPosition() != null)
+                .collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
         if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK))
             gameOver();
     }
 
     private void gameOver() {
+        gameService.finishGame(game, currentTurn);
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle("Game Over");
         VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
@@ -249,7 +252,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             cleanUpAll();
             game = g;
             steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-            currentTurn = CommonUtils.getOppositeColor(steps.getLast().getPlayerColor());
+            currentTurn = game.getTurn();
             drawNewBoard();
             reloadAndPlacePieces();
             recalculatePossibleSteps();
@@ -308,10 +311,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         gameService.killPiece(f.getDbId());
                         isAnythingEaten = true;
                     });
-            gameService.saveStep(game.getId(),
-                    playerColor, selectedPiece.getPosition().getKey(),
-                    cell.getKey(), selectedPiece.getDbId());
-
             selectedPiece.placeAt(cell);
             replaceWithQueenIfNeeded(cell, selectedPiece);
 
@@ -320,11 +319,20 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 selectedPiece.calculatePossibleSteps(cells);
                 // if still have anything to eat
                 if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
+                    gameService.saveStep(game,
+                            playerColor, selectedPiece.getPosition().getKey(),
+                            cell.getKey(), selectedPiece.getDbId(), false);
                     selectedPiece = null;
+                    if (cell.equals(event.getSource())) {
+                        broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
+                    }
                     return;
                 }
                 isAnythingEaten = false;
             }
+            gameService.saveStep(game,
+                    playerColor, selectedPiece.getPosition().getKey(),
+                    cell.getKey(), selectedPiece.getDbId(), true);
             checkIsGameOver();
             currentTurn = CommonUtils.getOppositeColor(currentTurn);
             revertTurn();

@@ -10,6 +10,9 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import static com.ivpl.games.constants.GameStatus.IN_PROGRESS;
+import static com.ivpl.games.constants.GameStatus.WAITING_FOR_OPPONENT;
+
 @Entity
 @Table(name = "GAMES")
 @Getter
@@ -27,6 +30,8 @@ public class Game {
     private GameStatus status;
     private Timestamp startDate;
     private Integer stepCount;
+    private Color turn;
+    private Color winner;
 
     protected Game() {}
 
@@ -34,8 +39,13 @@ public class Game {
         this.player1Id = player1Id;
         this.colorPlayer1 = color;
         this.type = type;
-        this.status = GameStatus.WAITING_FOR_OPPONENT;
+        this.status = WAITING_FOR_OPPONENT;
         this.startDate = new Timestamp(new Date().getTime());
         this.stepCount = 0;
+        this.turn = Color.WHITE;
+    }
+
+    public boolean isActive() {
+        return WAITING_FOR_OPPONENT.equals(status) || IN_PROGRESS.equals(status);
     }
 }
