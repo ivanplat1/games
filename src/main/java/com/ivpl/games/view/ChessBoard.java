@@ -1,6 +1,7 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
@@ -51,7 +52,6 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private final transient GameRepository gameRepository;
     private final transient GameService gameService;
     private final transient SecurityService securityService;
-    // TODO move actions with DB to GameService
     private final transient StepRepository stepRepository;
     Registration broadcasterRegistration;
 
@@ -200,12 +200,13 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         dialog.open();
     }
 
-    private void replaceWithQueenIfNeeded(Cell cell, PieceView pieceView) {
-        if (isBorderCell(cell.getKey(), pieceView.getColor())) {
-            QueenView queenView = new QueenView(pieceView.getPieceId(), pieceView.getDbId(), pieceView.getColor(), cell);
+    private void replaceWithQueenIfNeeded(Cell cell, PieceView piece) {
+        if (isBorderCell(cell.getKey(), piece.getColor())) {
+            QueenView queenView = new QueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), cell);
             addPieceListener(queenView);
             cell.remove(selectedPiece);
             cell.setPiece(queenView);
+            gameService.mutatePiece(piece.getDbId(), PieceType.QUEEN);
         }
     }
 

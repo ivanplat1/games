@@ -28,6 +28,7 @@ public class Piece {
     private Long id;
     private Long gameId;
     private Long gamePieceId;
+    @Setter
     private PieceType type;
     private Color color;
     @Setter

@@ -109,4 +109,12 @@ public class GameService {
         piece.setAlive(false);
         pieceRepository.saveAndFlush(piece);
     }
+
+    @NonNull
+    public void mutatePiece(Long pieceId, PieceType newType) {
+        Piece piece = pieceRepository.findPieceById(pieceId)
+                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));
+        piece.setType(newType);
+        pieceRepository.saveAndFlush(piece);
+    }
 }
