@@ -20,8 +20,8 @@ public class CheckerView extends PieceView {
     }
 
     @Override
-    protected List<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
-        List<Cell> list = new ArrayList<>();
+    protected @lombok.NonNull LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
+        @lombok.NonNull LinkedList<Cell> list = new LinkedList<>();
         CellKey key = new CellKey(sourceKey.getX()+(targetKey.getX()-sourceKey.getX())*2,
                 sourceKey.getY()+(targetKey.getY()- sourceKey.getY())*2);
         Optional.ofNullable(cells.get(key)).filter(c -> !c.isOccupied()).ifPresent(list::add);

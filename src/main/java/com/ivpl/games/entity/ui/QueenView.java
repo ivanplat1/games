@@ -23,7 +23,7 @@ public class QueenView extends PieceView {
     }
 
     @Override
-    protected @NonNull List<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
+    protected @NonNull LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
         return DirectionsForClassRepo
                 .getCertainDirectionForClass(getClass(), calculateDirectionKey(sourceKey, targetKey))
                 .stream()
@@ -34,7 +34,7 @@ public class QueenView extends PieceView {
                 .map(k -> Optional.ofNullable(cells.get(k)))
                 .filter(Optional::isPresent).map(Optional::get)
                 .takeWhile(c -> !c.isOccupied())
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(LinkedList::new));
     }
 
     private String calculateDirectionKey(CellKey sourceKey, CellKey targetKey) {

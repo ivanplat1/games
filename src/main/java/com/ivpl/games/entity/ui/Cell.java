@@ -18,7 +18,7 @@ public class Cell extends Div {
 
     private final CellKey key;
     private final Color color;
-    private PieceView pieceView = null;
+    private PieceView piece = null;
     @Setter
     private Registration onClickListener;
 
@@ -39,13 +39,13 @@ public class Cell extends Div {
     }
 
     public void setPiece(PieceView piece) {
-        this.pieceView = piece;
+        this.piece = piece;
         add(piece);
     }
 
     public void removePiece() {
-        remove(pieceView);
-        this.pieceView = null;
+        remove(piece);
+        this.piece = null;
     }
 
     public void addSelectedStyle() {
@@ -58,6 +58,6 @@ public class Cell extends Div {
     }
 
     public boolean isOccupied() {
-        return pieceView != null;
+        return piece != null;
     }
 }

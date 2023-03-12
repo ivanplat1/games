@@ -1,7 +1,6 @@
 package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
-import com.ivpl.games.services.GameService;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -55,15 +54,19 @@ public abstract class PieceView extends Div {
                             .filter(c -> c.inRange(1, 8))
                             .map(k -> Optional.ofNullable(cells.get(k)))
                             .filter(Optional::isPresent).map(Optional::get)
-                            .takeWhile(c -> !c.isOccupied() || !getColor().equals(c.getPieceView().getColor()))
+                            .takeWhile(c -> !c.isOccupied() || !getColor().equals(c.getPiece().getColor()))
                             .forEach(targetCell -> {
                                 if (targetCell.isOccupied()) {
-                                    List<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
-                                    cellsBehindTarget.forEach(c -> {
-                                        piecesToBeEaten.put(c.getKey(), targetCell.getPieceView());
-                                        eatingCells.add(c.getKey());
+                                    LinkedList<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
+                                    if (cellsBehindTarget.isEmpty() || cellsBehindTarget.getFirst().isOccupied()) {
                                         shouldStopCalculationForDirection = true;
-                                    });
+                                    } else {
+                                        cellsBehindTarget.forEach(c -> {
+                                            piecesToBeEaten.put(c.getKey(), targetCell.getPiece());
+                                            eatingCells.add(c.getKey());
+                                            shouldStopCalculationForDirection = true;
+                                        });
+                                    }
                                 } else if (getClass() == QueenView.class || (WHITE.equals(color)
                                         // filter out steps back
                                         ? currentPosition.getY() > targetCell.getKey().getY()
@@ -109,8 +112,7 @@ public abstract class PieceView extends Div {
         return DirectionsForClassRepo.getDirectionsForClass(getClass());
     }
 
-    @NonNull
-    protected abstract List<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);
+    protected abstract @NonNull LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);
 
     public void toDie() {
         position.removePiece();
