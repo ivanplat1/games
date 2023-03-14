@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 import static com.ivpl.games.constants.PieceType.CHECKER;
-import static com.ivpl.games.constants.PieceType.QUEEN;
+import static com.ivpl.games.constants.PieceType.CHECKER_QUEEN;
 
 @Service
 public class PieceToPieceViewConverter {
@@ -18,7 +18,7 @@ public class PieceToPieceViewConverter {
                     source.getColor(),
                     source.getPosition() != null
                             ? cells.get(new CellKey(source.getPosition())) : null);
-        } else if (QUEEN.equals(source.getType())) {
+        } else if (CHECKER_QUEEN.equals(source.getType())) {
             return new QueenView(source.getGamePieceId(), source.getId(), source.getColor(),
                     source.getPosition() != null
                             ? cells.get(new CellKey(source.getPosition())) : null);

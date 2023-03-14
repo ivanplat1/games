@@ -33,9 +33,6 @@ public class Cell extends Div {
         } else {
             addClassName("black-cell");
         }
-
-        setHeight("75px");
-        setWidth("75px");
     }
 
     public void setPiece(PieceView piece) {

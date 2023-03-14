@@ -225,7 +225,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             cell.remove(selectedPiece);
             cell.setPiece(queenView);
             selectedPiece = queenView;
-            gameService.mutatePiece(piece.getDbId(), PieceType.QUEEN);
+            gameService.mutatePiece(piece.getDbId(), PieceType.CHECKER_QUEEN);
         }
     }
 

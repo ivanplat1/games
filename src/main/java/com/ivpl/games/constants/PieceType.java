@@ -2,5 +2,11 @@ package com.ivpl.games.constants;
 
 public enum PieceType {
     CHECKER,
-    QUEEN
+    CHECKER_QUEEN,
+    PAWN,
+    ROOK,
+    HORSE,
+    BISHOP,
+    QUEEN,
+    KING
 }

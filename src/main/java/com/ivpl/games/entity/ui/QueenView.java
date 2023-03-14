@@ -9,7 +9,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ivpl.games.constants.Color.WHITE;
-import static com.ivpl.games.constants.Constants.*;
 
 public class QueenView extends PieceView {
 
@@ -19,7 +18,7 @@ public class QueenView extends PieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(Color.WHITE.equals(getColor()) ? WHITE_QUEEN_IMG : BLACK_QUEEN_IMG, "queenImage");
+        return new Image(Color.WHITE.equals(getColor()) ? "images/checkers/WhiteQueen.png" : "images/checkers/BlackQueen.png", "queenImage");
     }
 
     @Override

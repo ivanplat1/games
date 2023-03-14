@@ -5,9 +5,6 @@ import com.vaadin.flow.component.html.Image;
 
 import java.util.*;
 
-import static com.ivpl.games.constants.Constants.BLACK_CHECKER_IMG;
-import static com.ivpl.games.constants.Constants.WHITE_CHECKER_IMG;
-
 public class CheckerView extends PieceView {
 
     public CheckerView(Long id, Long dbId, Color color, Cell initPosition) {
@@ -16,7 +13,7 @@ public class CheckerView extends PieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(Color.WHITE.equals(getColor()) ? WHITE_CHECKER_IMG : BLACK_CHECKER_IMG, "checkerImage");
+        return new Image(Color.WHITE.equals(getColor()) ? "images/checkers/WhiteChecker.png" : "images/checkers/BlackChecker.png", "checkerImage");
     }
 
     @Override

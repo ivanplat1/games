@@ -49,10 +49,14 @@
 
 .black-cell {
     background-color: rgb(50, 49, 49);
+    width: 75px;
+    height: 75px;
 }
 
 .white-cell {
     background-color: rgb(226 213 202);
+    width: 75px;
+    height: 75px;
 }
 
 .turnIndicator {
@@ -99,4 +103,9 @@
     font-size: 1.5rem;
     font-weight: 700;
     text-shadow: 0.3em 0.3em 1em black;
+}
+
+img {
+    height: auto;
+    width: 100%;
 }
