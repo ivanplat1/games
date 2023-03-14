@@ -2,7 +2,7 @@ package com.ivpl.games.utils;
 
 import com.ivpl.games.entity.ui.CheckerView;
 import com.ivpl.games.entity.ui.PieceView;
-import com.ivpl.games.entity.ui.QueenView;
+import com.ivpl.games.entity.ui.CheckerQueenView;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -14,7 +14,7 @@ public class DirectionsForClassRepo {
 
     public DirectionsForClassRepo() {
         repository.put(CheckerView.class, calculateDirections(1));
-        repository.put(QueenView.class, calculateDirections(7));
+        repository.put(CheckerQueenView.class, calculateDirections(7));
     }
 
     public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends PieceView> clazz) {

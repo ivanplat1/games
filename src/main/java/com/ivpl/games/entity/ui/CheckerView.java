@@ -1,14 +1,15 @@
 package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.PieceType;
 import com.vaadin.flow.component.html.Image;
 
 import java.util.*;
 
 public class CheckerView extends PieceView {
 
-    public CheckerView(Long id, Long dbId, Color color, Cell initPosition) {
-        super(id, dbId, color, initPosition);
+    public CheckerView(Long id, Long dbId, Color color, PieceType type, Cell initPosition) {
+        super(id, dbId, color, type, initPosition);
     }
 
     @Override

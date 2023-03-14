@@ -110,7 +110,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         currentTurn = game.getTurn();
                         drawNewBoard();
                         reloadAndPlacePieces();
-                        recalculatePossibleSteps();
+                        //recalculatePossibleSteps();
                     } catch (AuthenticationException e) {
                         e.printStackTrace();
                     }
@@ -220,11 +220,11 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void replaceWithQueenIfNeeded(Cell cell, PieceView piece) {
         if (isBorderCell(cell.getKey(), piece.getColor())) {
-            QueenView queenView = new QueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), cell);
-            addPieceListener(queenView);
+            CheckerQueenView checkerQueenView = new CheckerQueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), PieceType.CHECKER_QUEEN, cell);
+            addPieceListener(checkerQueenView);
             cell.remove(selectedPiece);
-            cell.setPiece(queenView);
-            selectedPiece = queenView;
+            cell.setPiece(checkerQueenView);
+            selectedPiece = checkerQueenView;
             gameService.mutatePiece(piece.getDbId(), PieceType.CHECKER_QUEEN);
         }
     }

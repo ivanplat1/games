@@ -1,6 +1,7 @@
 package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -9,6 +10,7 @@ import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
 
@@ -21,6 +23,7 @@ public abstract class PieceView extends Div {
     private final Long pieceId;
     private final Long dbId;
     private final Color color;
+    private final PieceType type;
     @Getter
     private Cell position;
     @Setter
@@ -30,10 +33,11 @@ public abstract class PieceView extends Div {
     private final LinkedList<CellKey> steps = new LinkedList<>();
     private boolean shouldStopCalculationForDirection;
 
-    protected PieceView(Long pieceId, Long dbId, Color color, Cell position) {
+    protected PieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         this.pieceId = pieceId;
         this.dbId = dbId;
         this.color = color;
+        this.type = type;
         this.position = position;
         add(getImage());
     }
@@ -67,7 +71,7 @@ public abstract class PieceView extends Div {
                                             shouldStopCalculationForDirection = true;
                                         });
                                     }
-                                } else if (getClass() == QueenView.class || (WHITE.equals(color)
+                                } else if (getClass() == CheckerQueenView.class || (WHITE.equals(color)
                                         // filter out steps back
                                         ? currentPosition.getY() > targetCell.getKey().getY()
                                         : currentPosition.getY() < targetCell.getKey().getY()))
@@ -117,5 +121,9 @@ public abstract class PieceView extends Div {
     public void toDie() {
         position.removePiece();
         position = null;
+    }
+
+    protected String calculateImageName() {
+        return Strings.concat(getColor().name(), getClass().getSimpleName());
     }
 }

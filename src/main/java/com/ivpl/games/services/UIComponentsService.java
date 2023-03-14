@@ -99,7 +99,7 @@ public class UIComponentsService {
         return e-> {
             try {
                 dialog.close();
-                gameService.newGame(securityService.getAuthenticatedUser(), color, GameType.CHECKERS);
+                gameService.newGame(securityService.getAuthenticatedUser(), color, GameType.CHESS);
             } catch (AuthenticationException authenticationException) {
                 log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR);
             }
