@@ -1,20 +1,16 @@
-package com.ivpl.games.entity.ui;
+package com.ivpl.games.entity.ui.checkers;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.PieceType;
-import com.vaadin.flow.component.html.Image;
+import com.ivpl.games.entity.ui.Cell;
+import com.ivpl.games.entity.ui.CellKey;
 
 import java.util.*;
 
-public class CheckerView extends PieceView {
+public class CheckerView extends CheckersPieceView {
 
     public CheckerView(Long id, Long dbId, Color color, PieceType type, Cell initPosition) {
         super(id, dbId, color, type, initPosition);
-    }
-
-    @Override
-    protected Image getImage() {
-        return new Image(Color.WHITE.equals(getColor()) ? "images/checkers/WhiteChecker.png" : "images/checkers/BlackChecker.png", "checkerImage");
     }
 
     @Override

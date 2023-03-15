@@ -6,6 +6,7 @@ import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.entity.ui.*;
+import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
@@ -61,9 +62,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private Color currentTurn;
     private Div turnIndicator;
     @Getter
-    private PieceView selectedPiece;
+    private AbstractPieceView selectedPiece;
     private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
-    private final List<PieceView> pieces = new ArrayList<>();
+    private final List<AbstractPieceView> pieces = new ArrayList<>();
     private boolean isAnythingEaten;
     private VerticalLayout board;
     private transient LinkedList<Step> steps;
@@ -110,7 +111,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         currentTurn = game.getTurn();
                         drawNewBoard();
                         reloadAndPlacePieces();
-                        //recalculatePossibleSteps();
+                        recalculatePossibleSteps();
                     } catch (AuthenticationException e) {
                         e.printStackTrace();
                     }
@@ -197,9 +198,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void checkIsGameOver() {
-        Map<Color, List<PieceView>> groupsByColor = pieces.stream()
+        Map<Color, List<AbstractPieceView>> groupsByColor = pieces.stream()
                 .filter(p -> p.getPosition() != null)
-                .collect(Collectors.groupingBy(PieceView::getColor, Collectors.toList()));
+                .collect(Collectors.groupingBy(AbstractPieceView::getColor, Collectors.toList()));
         if (!groupsByColor.containsKey(WHITE) || !groupsByColor.containsKey(BLACK)) {
             gameService.finishGame(game, currentTurn);
             gameOver();
@@ -218,7 +219,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         dialog.open();
     }
 
-    private void replaceWithQueenIfNeeded(Cell cell, PieceView piece) {
+    private void replaceWithQueenIfNeeded(Cell cell, AbstractPieceView piece) {
         if (isBorderCell(cell.getKey(), piece.getColor())) {
             CheckerQueenView checkerQueenView = new CheckerQueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), PieceType.CHECKER_QUEEN, cell);
             addPieceListener(checkerQueenView);
@@ -279,7 +280,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
         return turnIndicator;
     }
 
-    private void addPieceListener(PieceView p) {
+    private void addPieceListener(AbstractPieceView p) {
         p.setOnClickListener(p.addClickListener(e -> {
             if (p.getPossibleSteps().isEmpty() || !currentTurn.equals(p.getColor())) return;
             p.selectUnselectPiece();

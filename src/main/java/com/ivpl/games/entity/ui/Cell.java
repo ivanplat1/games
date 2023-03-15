@@ -18,7 +18,7 @@ public class Cell extends Div {
 
     private final CellKey key;
     private final Color color;
-    private PieceView piece = null;
+    private AbstractPieceView piece = null;
     @Setter
     private Registration onClickListener;
 
@@ -35,7 +35,7 @@ public class Cell extends Div {
         }
     }
 
-    public void setPiece(PieceView piece) {
+    public void setPiece(AbstractPieceView piece) {
         this.piece = piece;
         add(piece);
     }

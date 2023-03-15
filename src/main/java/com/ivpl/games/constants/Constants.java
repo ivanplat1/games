@@ -12,11 +12,14 @@ public final class Constants {
 
     public static final String BACKGROUND = "background";
     public static final String BORDER_STYLE = "border-style";
+    public static final String BORDER_COLOR = "border-color";
+    public static final String GREEN = "green";
     public static final String FILTER_PROP = "filter";
     public static final String LOGOUT_STR = "Logout";
     public static final String JOIN_GAME_OR_START_NEW_STR = "Choose a game to fight or start a new one";
     public static final String NEW_GAME_STR = "New Game";
-    public static final String COOSE_YOUR_COLOR_STR = "Chose Your Color";
+    public static final String START_STR = "Start";
+    public static final String CHOSE_YOUR_COLOR_STR = "Chose Your Color";
     public static final String GAME_NOT_FOUND_LABEL_STR = "Game not found or finished.";
     public static final String GO_TO_LOBBY_STR = "Go To Lobby";
 

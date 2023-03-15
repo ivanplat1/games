@@ -1,9 +1,10 @@
-package com.ivpl.games.entity.ui;
+package com.ivpl.games.entity.ui.checkers;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.PieceType;
+import com.ivpl.games.entity.ui.Cell;
+import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.utils.DirectionsForClassRepo;
-import com.vaadin.flow.component.html.Image;
 import lombok.NonNull;
 
 import java.util.*;
@@ -11,15 +12,10 @@ import java.util.stream.Collectors;
 
 import static com.ivpl.games.constants.Color.WHITE;
 
-public class CheckerQueenView extends PieceView {
+public class CheckerQueenView extends CheckersPieceView {
 
     public CheckerQueenView(Long id, Long dbId, Color color, PieceType type, Cell initPosition) {
         super(id, dbId, color, type, initPosition);
-    }
-
-    @Override
-    protected Image getImage() {
-        return new Image(Color.WHITE.equals(getColor()) ? "images/checkers/WhiteQueen.png" : "images/checkers/BlackQueen.png", "queenImage");
     }
 
     @Override

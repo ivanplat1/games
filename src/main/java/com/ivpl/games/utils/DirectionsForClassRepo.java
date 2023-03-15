@@ -1,8 +1,8 @@
 package com.ivpl.games.utils;
 
-import com.ivpl.games.entity.ui.CheckerView;
-import com.ivpl.games.entity.ui.PieceView;
-import com.ivpl.games.entity.ui.CheckerQueenView;
+import com.ivpl.games.entity.ui.checkers.CheckerView;
+import com.ivpl.games.entity.ui.AbstractPieceView;
+import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
@@ -17,11 +17,11 @@ public class DirectionsForClassRepo {
         repository.put(CheckerQueenView.class, calculateDirections(7));
     }
 
-    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends PieceView> clazz) {
+    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends AbstractPieceView> clazz) {
         return repository.get(clazz);
     }
 
-    public static List<int[]> getCertainDirectionForClass(Class<? extends PieceView> clazz, String key) {
+    public static List<int[]> getCertainDirectionForClass(Class<? extends AbstractPieceView> clazz, String key) {
         return Optional.ofNullable(getDirectionsForClass(clazz)).map(ds -> ds.get(key))
                 .orElseThrow(() -> new NoSuchElementException(
                         String.format("Directions are not implemented for Item child class %s", clazz.getName())));

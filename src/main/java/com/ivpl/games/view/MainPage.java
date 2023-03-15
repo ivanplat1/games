@@ -71,8 +71,8 @@ public class MainPage extends VerticalLayout {
     }
 
     private VerticalLayout getMenu() {
-        Button newGameBtn = new Button(NEW_GAME_STR, e -> uiComponentsService.showNewGameDialog());
-        newGameBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        Button newGameBtn = new Button(NEW_GAME_STR, new Icon(VaadinIcon.GAMEPAD), e -> uiComponentsService.showNewGameDialog());
+        newGameBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
         newGameBtn.setClassName("button");
         VerticalLayout vl = new VerticalLayout(newGameBtn);
         vl.setAlignItems(Alignment.END);

@@ -8,7 +8,7 @@ import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Piece;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
-import com.ivpl.games.entity.ui.PieceView;
+import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.PieceRepository;
 import com.ivpl.games.repository.StepRepository;
@@ -19,7 +19,6 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -83,7 +82,7 @@ public class GameService {
         gameRepository.saveAndFlush(game);
     }
 
-    public List<PieceView> loadPieceViewsForGame(Long gameId, Map<CellKey, Cell> cells) {
+    public List<AbstractPieceView> loadPieceViewsForGame(Long gameId, Map<CellKey, Cell> cells) {
         return pieceRepository.findAllByGameId(gameId).stream()
                 .map(e -> pieceToPieceViewConverter.convert(e, cells))
                 .collect(Collectors.toList());
