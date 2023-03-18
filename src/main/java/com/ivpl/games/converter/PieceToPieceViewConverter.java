@@ -7,12 +7,16 @@ import com.ivpl.games.entity.ui.*;
 import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import com.ivpl.games.entity.ui.checkers.CheckerView;
 import com.ivpl.games.entity.ui.chess.*;
+import org.apache.http.MethodNotSupportedException;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.RefreshFailedException;
+import javax.transaction.SystemException;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.ivpl.games.constants.ExceptionMessages.CANNOT_FIND_VIEW_FOR_PIECE;
 import static com.ivpl.games.constants.PieceType.*;
 
 @Service
@@ -31,14 +35,15 @@ public class PieceToPieceViewConverter {
 
     public AbstractPieceView convert(Piece source, Map<CellKey, Cell> cells) {
         try {
-            Cell position = Optional.ofNullable(cells.get(new CellKey(source.getPosition())))
-                    .orElseThrow();
+            Cell position = source.getPosition() != null
+                    ? Optional.ofNullable(cells.get(new CellKey(source.getPosition()))).orElseThrow()
+                    : null;
             return typeToViewClassMapping.get(source.getType())
                     .getDeclaredConstructor(Long.class, Long.class, Color.class, PieceType.class, Cell.class)
             .newInstance(source.getGamePieceId(), source.getId(), source.getColor(), source.getType(),
                     position);
         } catch (ReflectiveOperationException e) {
-            return null;
+            throw new IllegalArgumentException(String.format(CANNOT_FIND_VIEW_FOR_PIECE, source.getType()));
         }
     }
 }

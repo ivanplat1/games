@@ -23,6 +23,8 @@ public abstract class AbstractPieceView extends Div {
     protected final Color color;
     protected final PieceType type;
     @Getter
+    protected boolean isAlive;
+    @Getter
     protected Cell position;
     @Setter
     private Registration onClickListener;
@@ -76,6 +78,7 @@ public abstract class AbstractPieceView extends Div {
     public void toDie() {
         position.removePiece();
         position = null;
+        isAlive = false;
     }
 
     protected String calculateImageName() {
