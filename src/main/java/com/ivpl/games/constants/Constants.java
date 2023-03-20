@@ -10,6 +10,7 @@ public final class Constants {
     public static final String BLACK_CELL_COLOR = "rgb(50, 49, 49)";
     public static final String RANDOM_SELECTOR_BACKGROUND = "-webkit-linear-gradient(-30deg, rgb(226, 213, 202) 50%, rgb(50, 49, 49) 50%)";
 
+    public static final String PIECE_IMAGE_ALT = "pieceImage";
     public static final String BACKGROUND = "background";
     public static final String BORDER_STYLE = "border-style";
     public static final String BORDER_COLOR = "border-color";

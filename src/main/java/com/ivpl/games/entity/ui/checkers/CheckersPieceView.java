@@ -6,13 +6,15 @@ import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
 import com.vaadin.flow.component.html.Image;
-import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
 
 import static com.ivpl.games.constants.Color.WHITE;
+import static com.ivpl.games.constants.Constants.PIECE_IMAGE_ALT;
 
 public abstract class CheckersPieceView extends AbstractPieceView {
+
+    private static final String IMAGE_PATH_STR = "images/checkers/%s.png";
 
     protected CheckersPieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         super(pieceId, dbId, color, type, position);
@@ -63,7 +65,7 @@ public abstract class CheckersPieceView extends AbstractPieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(Strings.concat("images/checkers/", calculateImageName()).concat(".png"), "checkerImage");
+        return new Image(String.format(IMAGE_PATH_STR, calculateImageName()), PIECE_IMAGE_ALT);
     }
 
     protected abstract LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);
