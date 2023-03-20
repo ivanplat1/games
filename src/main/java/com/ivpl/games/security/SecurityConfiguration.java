@@ -64,17 +64,6 @@ public class SecurityConfiguration
                 .and().logout().logoutSuccessUrl(LOGOUT_SUCCESS_URL);
     }
 
-/*    @Bean
-    @Override
-    public UserDetailsService userDetailsService() {
-        *//*return jpaUserDetailsManager;*//*
-        return new InMemoryUserDetailsManager(userRepository.findAll().stream()
-                .map(u -> User.withUsername(u.getUsername())
-                        .password(u.getPassword())
-                        .roles("USER")
-                        .build()).collect(Collectors.toList()));
-    }*/
-
     /**
      * Allows access to static resources, bypassing Spring Security.
      */

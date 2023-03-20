@@ -3,6 +3,7 @@ package com.ivpl.games.view;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.GameType;
 import com.ivpl.games.constants.PieceType;
+import com.ivpl.games.constants.Styles;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
@@ -37,17 +38,14 @@ import java.util.stream.Collectors;
 import static com.ivpl.games.constants.Color.BLACK;
 import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.Styles.BLACK_CELL_COLOR;
+import static com.ivpl.games.constants.Styles.WHITE_CELL_COLOR;
 
 @CssImport("./styles/styles.css")
 
 @Route("checkers")
 @PermitAll
 public class ChessBoard extends VerticalLayout implements HasUrlParameter<String> {
-
-    private static final String CHESS_BOARD_WHITES_STYLE = "chess-board-whites";
-    private static final String CHESS_BOARD_BLACKS_STYLE = "chess-board-blacks";
-    private static final String BOARD_LINE_WHITES_STYLE = "board-line-whites";
-    private static final String BOARD_LINE_BLACKS_STYLE = "board-line-blacks";
 
     private final transient UIComponentsService uiComponentsService;
     private final transient BroadcasterService broadcasterService;
@@ -164,7 +162,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private VerticalLayout printBoard(Color color) {
         board = new VerticalLayout();
         board.setSpacing(false);
-        board.addClassName(CHESS_BOARD_WHITES_STYLE);
+        board.addClassName(Styles.CHESS_BOARD_WHITES_STYLE);
         board.setPadding(false);
         HorizontalLayout line;
 
@@ -212,7 +210,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void gameOver() {
         Dialog dialog = new Dialog();
-        dialog.setHeaderTitle("Game Over");
+        dialog.setHeaderTitle(GAME_OVER_STR);
         VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
         dialogLayout.setAlignItems(Alignment.CENTER);
         Button okButton = uiComponentsService.getGoToLobbyButtonForDialog(dialog);
@@ -244,12 +242,12 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void reverseBoard() {
-        if (CHESS_BOARD_WHITES_STYLE.equals(board.getClassName())) {
-            board.setClassName(CHESS_BOARD_BLACKS_STYLE);
-            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_BLACKS_STYLE));
+        if (Styles.CHESS_BOARD_WHITES_STYLE.equals(board.getClassName())) {
+            board.setClassName(Styles.CHESS_BOARD_BLACKS_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(Styles.BOARD_LINE_BLACKS_STYLE));
         } else {
-            board.setClassName(CHESS_BOARD_WHITES_STYLE);
-            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(BOARD_LINE_WHITES_STYLE));
+            board.setClassName(Styles.CHESS_BOARD_WHITES_STYLE);
+            board.getChildren().forEach(c -> ((HorizontalLayout) c).setClassName(Styles.BOARD_LINE_WHITES_STYLE));
         }
     }
 
@@ -272,9 +270,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void revertTurn() {
         if (WHITE.equals(currentTurn)) {
-            turnIndicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
+            turnIndicator.getStyle().set(Styles.BACKGROUND, WHITE_CELL_COLOR);
         } else {
-            turnIndicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
+            turnIndicator.getStyle().set(Styles.BACKGROUND, BLACK_CELL_COLOR);
         }
     }
 

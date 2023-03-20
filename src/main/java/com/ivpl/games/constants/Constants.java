@@ -6,16 +6,7 @@ public final class Constants {
     private Constants() {
     }
 
-    public static final String WHITE_CELL_COLOR = "rgb(226 213 202)";
-    public static final String BLACK_CELL_COLOR = "rgb(50, 49, 49)";
-    public static final String RANDOM_SELECTOR_BACKGROUND = "-webkit-linear-gradient(-30deg, rgb(226, 213, 202) 50%, rgb(50, 49, 49) 50%)";
-
     public static final String PIECE_IMAGE_ALT = "pieceImage";
-    public static final String BACKGROUND = "background";
-    public static final String BORDER_STYLE = "border-style";
-    public static final String BORDER_COLOR = "border-color";
-    public static final String GREEN = "green";
-    public static final String FILTER_PROP = "filter";
     public static final String LOGOUT_STR = "Logout";
     public static final String JOIN_GAME_OR_START_NEW_STR = "Choose a game to fight or start a new one";
     public static final String NEW_GAME_STR = "New Game";
@@ -23,6 +14,7 @@ public final class Constants {
     public static final String CHOSE_YOUR_COLOR_STR = "Chose Your Color";
     public static final String GAME_NOT_FOUND_LABEL_STR = "Game not found or finished.";
     public static final String GO_TO_LOBBY_STR = "Go To Lobby";
+    public static final String GAME_OVER_STR = "Game Over";
 
     public static final String ACTIVE_GAMES_HEADER_ID_STR = "ID";
     public static final String ACTIVE_GAMES_HEADER_PLAYERS_STR = "Players";

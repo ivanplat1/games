@@ -29,6 +29,7 @@ import java.util.Optional;
 
 import static com.ivpl.games.constants.Color.*;
 import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.Styles.*;
 
 @Component
 public class UIComponentsService {

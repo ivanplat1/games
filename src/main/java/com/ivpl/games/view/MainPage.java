@@ -38,6 +38,7 @@ import java.util.Set;
 
 import static com.ivpl.games.constants.Constants.*;
 import static com.ivpl.games.constants.GameStatus.*;
+import static com.ivpl.games.constants.Styles.*;
 
 @Route("")
 public class MainPage extends VerticalLayout {
@@ -73,7 +74,7 @@ public class MainPage extends VerticalLayout {
     private VerticalLayout getMenu() {
         Button newGameBtn = new Button(NEW_GAME_STR, new Icon(VaadinIcon.GAMEPAD), e -> uiComponentsService.showNewGameDialog());
         newGameBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
-        newGameBtn.setClassName("button");
+        newGameBtn.setClassName(BUTTON_STYLE);
         VerticalLayout vl = new VerticalLayout(newGameBtn);
         vl.setAlignItems(Alignment.END);
         return vl;
@@ -81,7 +82,7 @@ public class MainPage extends VerticalLayout {
 
     private VerticalLayout getActiveGamesGrid() {
         Grid<Game> activeGames = new Grid<>(Game.class, false);
-        activeGames.setClassName("active-games");
+        activeGames.setClassName(ACTIVE_GAMES_STYLE);
         activeGames.addColumn(createIdRenderer())
                 .setHeader(ACTIVE_GAMES_HEADER_ID_STR)
                 .setSortable(true).setWidth("10px")
@@ -96,7 +97,7 @@ public class MainPage extends VerticalLayout {
         activeGames.addColumn(createActionComponentRenderer());
         refreshActiveGamesGrid(activeGames);
         Label label = new Label(JOIN_GAME_OR_START_NEW_STR);
-        label.setClassName("label-text");
+        label.setClassName(LABEL_TEXT_STYLE);
         Button refreshBtn = new Button(new Icon(VaadinIcon.REFRESH), e -> refreshActiveGamesGrid(activeGames));
         HorizontalLayout hl = new HorizontalLayout(label, refreshBtn);
         hl.setAlignItems(Alignment.END);
@@ -115,13 +116,13 @@ public class MainPage extends VerticalLayout {
     private static final SerializableBiConsumer<Span, Game> statusComponentUpdater = (
             span, game) -> {
         if (IN_PROGRESS.equals(game.getStatus())) {
-            span.setClassName("badge-orange");
+            span.setClassName(BADGE_ORANGE_STYLE);
             span.setText(IN_PROGRESS.getLabel());
         } else if (WAITING_FOR_OPPONENT.equals(game.getStatus())) {
-            span.setClassName("badge-green");
+            span.setClassName(BADGE_GREEN_STYLE);
             span.setText(WAITING_FOR_OPPONENT.getLabel());
         } else if (SELECTING_COLOR.equals(game.getStatus())) {
-            span.setClassName("badge-rose");
+            span.setClassName(BADGE_ROSE_STYLE);
             span.setText(SELECTING_COLOR.getLabel());
         }
     };

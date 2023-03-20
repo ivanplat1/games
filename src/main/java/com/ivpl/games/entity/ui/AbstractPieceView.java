@@ -2,6 +2,7 @@ package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.PieceType;
+import com.ivpl.games.constants.Styles;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import com.vaadin.flow.component.html.Div;
@@ -14,7 +15,8 @@ import lombok.Setter;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
-import static com.ivpl.games.constants.Constants.*;
+
+import static com.ivpl.games.constants.Styles.BRIGHTNESS_DARK;
 
 @Getter
 public abstract class AbstractPieceView extends Div {
@@ -58,7 +60,7 @@ public abstract class AbstractPieceView extends Div {
 
     public void selectUnselectPiece() {
         Style style = getStyle();
-        if (style.get(FILTER_PROP) == null) {
+        if (style.get(Styles.FILTER_PROP) == null) {
             selectPiece();
         } else {
             unselectPiece();
@@ -66,11 +68,11 @@ public abstract class AbstractPieceView extends Div {
     }
 
     public void selectPiece() {
-        getStyle().set(FILTER_PROP, "brightness(0.80)");
+        getStyle().set(Styles.FILTER_PROP, BRIGHTNESS_DARK);
     }
 
     public void unselectPiece() {
-        getStyle().remove(FILTER_PROP);
+        getStyle().remove(Styles.FILTER_PROP);
     }
 
     protected Map<String, LinkedList<int[]>> getDirections() {
