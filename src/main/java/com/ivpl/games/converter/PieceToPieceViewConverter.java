@@ -7,11 +7,8 @@ import com.ivpl.games.entity.ui.*;
 import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import com.ivpl.games.entity.ui.checkers.CheckerView;
 import com.ivpl.games.entity.ui.chess.*;
-import org.apache.http.MethodNotSupportedException;
 import org.springframework.stereotype.Service;
 
-import javax.security.auth.RefreshFailedException;
-import javax.transaction.SystemException;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;

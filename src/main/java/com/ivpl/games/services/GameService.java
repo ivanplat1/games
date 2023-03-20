@@ -66,16 +66,16 @@ public class GameService {
 
     public void saveStep(Long gameId,
                          Color playerColor,
-                         CellKey from,
                          CellKey to,
                          Long pieceId,
+                         Long pieceDBId,
                          boolean changeColor) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
-        Step step = new Step(gameId, increaseStepCount(game), playerColor, from, to, pieceId);
+        Piece piece = pieceRepository.findPieceById(pieceDBId)
+                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceDBId)));
+        Step step = new Step(gameId, increaseStepCount(game), playerColor, new CellKey(piece.getPosition()), to, pieceId);
         stepRepository.saveAndFlush(step);
-        Piece piece = pieceRepository.findPieceById(pieceId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));
         piece.setPosition(to.getAsArray());
         pieceRepository.saveAndFlush(piece);
         if (changeColor) game.setTurn(CommonUtils.getOppositeColor(game.getTurn()));

@@ -1,6 +1,7 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.GameType;
 import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
@@ -155,6 +156,8 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 .forEach(p -> {
                     p.getPosition().setPiece(p);
                     addPieceListener(p);
+                    p.getSteps().clear();
+                    p.getSteps().addAll(stepRepository.findAllByGameIdAndPieceIdOrderByGameStepId(game.getId(), p.getPieceId()));
                 });
     }
 
@@ -188,7 +191,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 .filter(p -> p.getPosition() != null && currentTurn.equals(p.getColor()) && currentTurn.equals(playerColor))
                 .forEach(p -> p.calculatePossibleSteps(cells));
 
-        boolean haveToEatAnything = pieces.stream()
+        boolean haveToEatAnything = gameTypeIsCheckers() && pieces.stream()
                 .filter(f -> currentTurn.equals(f.getColor()))
                 .anyMatch(f -> !f.getPiecesToBeEaten().isEmpty());
 
@@ -220,7 +223,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private void replaceWithQueenIfNeeded(Cell cell, AbstractPieceView piece) {
-        if (isBorderCell(cell.getKey(), piece.getColor())) {
+        if (gameTypeIsCheckers() && isBorderCell(cell.getKey(), piece.getColor())) {
             CheckerQueenView checkerQueenView = new CheckerQueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), PieceType.CHECKER_QUEEN, cell);
             addPieceListener(checkerQueenView);
             cell.remove(selectedPiece);
@@ -314,14 +317,14 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
             selectedPiece.placeAt(cell);
             replaceWithQueenIfNeeded(cell, selectedPiece);
 
-            if (isAnythingEaten) {
+            if (gameTypeIsCheckers() && isAnythingEaten) {
                 removeCellsHighlights();
                 selectedPiece.calculatePossibleSteps(cells);
                 // if still have anything to eat
                 if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
                     gameService.saveStep(game.getId(),
-                            playerColor, selectedPiece.getPosition().getKey(),
-                            cell.getKey(), selectedPiece.getDbId(), false);
+                            playerColor, cell.getKey(),
+                            selectedPiece.getPieceId(), selectedPiece.getDbId(), false);
                     selectedPiece = null;
                     if (cell.equals(event.getSource())) {
                         broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
@@ -331,8 +334,8 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 isAnythingEaten = false;
             }
             gameService.saveStep(game.getId(),
-                    playerColor, selectedPiece.getPosition().getKey(),
-                    cell.getKey(), selectedPiece.getDbId(), true);
+                    playerColor, cell.getKey(),
+                    selectedPiece.getPieceId(), selectedPiece.getDbId(), true);
             checkIsGameOver();
             currentTurn = CommonUtils.getOppositeColor(currentTurn);
             revertTurn();
@@ -343,5 +346,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                 broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
             }
         }));
+    }
+
+    private boolean gameTypeIsCheckers() {
+        return GameType.CHECKERS.equals(game.getType());
     }
 }

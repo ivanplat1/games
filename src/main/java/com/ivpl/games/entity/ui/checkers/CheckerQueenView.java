@@ -6,6 +6,7 @@ import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,7 +22,7 @@ public class CheckerQueenView extends CheckersPieceView {
     @Override
     protected @NonNull LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
         return DirectionsForClassRepo
-                .getCertainDirectionForClass(getClass(), calculateDirectionKey(sourceKey, targetKey))
+                .getCertainDirectionForClass(getType(), calculateDirectionKey(sourceKey, targetKey))
                 .stream()
                 .map(dc -> new CellKey(
                         targetKey.getX()+dc[0],
@@ -35,7 +36,7 @@ public class CheckerQueenView extends CheckersPieceView {
 
     private String calculateDirectionKey(CellKey sourceKey, CellKey targetKey) {
         return Arrays.toString(new int[] {(targetKey.getX()-sourceKey.getX()) < 0 ? -1 : 1,
-                (targetKey.getY()-sourceKey.getY()) < 0 ? -1 : 1});
+                (targetKey.getY()-sourceKey.getY()) < 0 ? -1 : 1}).replace(StringUtils.SPACE, StringUtils.EMPTY);
     }
 
 }

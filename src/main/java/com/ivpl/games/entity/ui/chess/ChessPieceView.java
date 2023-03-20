@@ -27,7 +27,6 @@ public abstract class ChessPieceView extends AbstractPieceView {
     public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
         possibleSteps.clear();
         piecesToBeEaten.clear();
-        Set<CellKey> eatingCells = new HashSet<>();
         CellKey currentPosition = position.getKey();
         int currentX = currentPosition.getX();
         int currentY = currentPosition.getY();
@@ -40,23 +39,19 @@ public abstract class ChessPieceView extends AbstractPieceView {
                                     .filter(c -> c.inRange(1, 8))
                                     .map(k -> Optional.ofNullable(cells.get(k)))
                                     .filter(Optional::isPresent).map(Optional::get)
-                                    .takeWhile(c -> !c.isOccupied() || !getColor().equals(c.getPiece().getColor()))
+                                    .takeWhile(c ->
+                                            PieceType.PAWN.equals(getType())
+                                                    ? (c.getKey().getX() == currentX && !c.isOccupied())
+                                                        || (c.getKey().getX() != currentX && c.isOccupied() && !getColor().equals(c.getPiece().getColor()))
+                                                    : !c.isOccupied() || !getColor().equals(c.getPiece().getColor()))
                                     .forEach(targetCell -> {
                                         if (targetCell.isOccupied()) {
-                                            piecesToBeEaten.put(targetCell.getKey(), targetCell.getPiece());
-                                            eatingCells.add(targetCell.getKey());
                                             shouldStopCalculationForDirection = true;
-                                        } else if ((WHITE.equals(color) || PieceType.CHECKER_QUEEN.equals(type)
-                                                // filter out steps back
-                                                ? currentPosition.getY() > targetCell.getKey().getY()
-                                                : currentPosition.getY() < targetCell.getKey().getY()))
-                                            possibleSteps.add(targetCell.getKey());
+                                            piecesToBeEaten.put(targetCell.getKey(), targetCell.getPiece());
+                                        }
+                                        possibleSteps.add(targetCell.getKey());
                                     });
                         }
                 );
-        if (!eatingCells.isEmpty()) {
-            possibleSteps.clear();
-            possibleSteps.addAll(eatingCells);
-        }
     }
 }

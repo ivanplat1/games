@@ -2,6 +2,7 @@ package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.PieceType;
+import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.utils.DirectionsForClassRepo;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -30,8 +31,9 @@ public abstract class AbstractPieceView extends Div {
     private Registration onClickListener;
     protected final  transient Map<CellKey, AbstractPieceView> piecesToBeEaten = new HashMap<>();
     protected final transient Set<CellKey> possibleSteps = new HashSet<>();
-    private final LinkedList<CellKey> steps = new LinkedList<>();
+    private final LinkedList<Step> steps = new LinkedList<>();
     protected boolean shouldStopCalculationForDirection;
+    private static final String PAWN_FORWARD_DIRECTION_KEY = "[1,0]";
 
     protected AbstractPieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         this.pieceId = pieceId;
@@ -71,8 +73,16 @@ public abstract class AbstractPieceView extends Div {
         getStyle().remove(FILTER_PROP);
     }
 
-    protected Map<String, List<int[]>> getDirections() {
-        return DirectionsForClassRepo.getDirectionsForClass(getClass());
+    protected Map<String, LinkedList<int[]>> getDirections() {
+        Map<String, LinkedList<int[]>> directions = DirectionsForClassRepo.getDirectionsForType(getType());
+        if (PieceType.PAWN.equals(getType()) && steps.isEmpty()) {
+            Map<String, LinkedList<int[]>> directionsNew = new HashMap<>(directions);
+            LinkedList<int[]> newDir = new LinkedList<>(directions.get(PAWN_FORWARD_DIRECTION_KEY));
+            newDir.add(new int[]{2,0});
+            directionsNew.put(PAWN_FORWARD_DIRECTION_KEY, newDir);
+            return directionsNew;
+        }
+        return directions;
     }
 
     public void toDie() {
