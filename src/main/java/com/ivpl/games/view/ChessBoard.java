@@ -185,8 +185,9 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
 
     private void recalculatePossibleSteps() {
         removeCellsHighlights();
+        if (!currentTurn.equals(playerColor)) return;
         pieces.stream()
-                .filter(p -> p.getPosition() != null && currentTurn.equals(p.getColor()) && currentTurn.equals(playerColor))
+                .filter(p -> p.getPosition() != null && currentTurn.equals(p.getColor()))
                 .forEach(p -> p.calculatePossibleSteps(cells));
 
         boolean haveToEatAnything = gameTypeIsCheckers() && pieces.stream()

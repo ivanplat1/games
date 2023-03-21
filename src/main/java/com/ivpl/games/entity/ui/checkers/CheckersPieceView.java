@@ -49,10 +49,11 @@ public abstract class CheckersPieceView extends AbstractPieceView {
                                                     shouldStopCalculationForDirection = true;
                                                 });
                                             }
-                                        } else if ((WHITE.equals(color) || PieceType.CHECKER_QUEEN.equals(type)
+                                        } else if ((WHITE.equals(color)
                                                 // filter out steps back
                                                 ? currentPosition.getY() > targetCell.getKey().getY()
-                                                : currentPosition.getY() < targetCell.getKey().getY()))
+                                                : currentPosition.getY() < targetCell.getKey().getY())
+                                                || PieceType.CHECKER_QUEEN.equals(type))
                                             possibleSteps.add(targetCell.getKey());
                                     });
                         }
