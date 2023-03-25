@@ -1,9 +1,6 @@
 package com.ivpl.games.view;
 
-import com.ivpl.games.constants.Color;
-import com.ivpl.games.constants.GameType;
-import com.ivpl.games.constants.PieceType;
-import com.ivpl.games.constants.Styles;
+import com.ivpl.games.constants.*;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
@@ -12,6 +9,8 @@ import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
+import com.ivpl.games.services.BoardService;
+import com.ivpl.games.services.BoardServiceImpl;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
@@ -45,7 +44,7 @@ import static com.ivpl.games.constants.Styles.WHITE_CELL_COLOR;
 
 @Route("checkers")
 @PermitAll
-public class ChessBoard extends VerticalLayout implements HasUrlParameter<String> {
+public class ChessBoardView extends VerticalLayout implements HasUrlParameter<String> {
 
     private final transient UIComponentsService uiComponentsService;
     private final transient BroadcasterService broadcasterService;
@@ -53,6 +52,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private final transient GameService gameService;
     private final transient SecurityService securityService;
     private final transient StepRepository stepRepository;
+    private final transient BoardService boardService;
     Registration broadcasterRegistration;
 
     private transient Game game;
@@ -68,15 +68,20 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     private VerticalLayout board;
     private transient LinkedList<Step> steps;
 
-    public ChessBoard(UIComponentsService uiComponentsService,
-                      BroadcasterService broadcasterService,
-                      GameRepository gameRepository, GameService gameService, SecurityService securityService, StepRepository stepRepository) {
+    public ChessBoardView(UIComponentsService uiComponentsService,
+                          BroadcasterService broadcasterService,
+                          GameRepository gameRepository,
+                          GameService gameService,
+                          SecurityService securityService,
+                          StepRepository stepRepository,
+                          BoardServiceImpl boardService) {
         this.uiComponentsService = uiComponentsService;
         this.broadcasterService = broadcasterService;
         this.gameRepository = gameRepository;
         this.gameService = gameService;
         this.securityService = securityService;
         this.stepRepository = stepRepository;
+        this.boardService = boardService;
     }
 
     @Override
@@ -115,6 +120,10 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
                         e.printStackTrace();
                     }
                 }, uiComponentsService::showGameNotFoundMessage);
+        cells.clear();
+        cells.putAll(board.getChildren().filter(Cell.class::isInstance)
+                .map(c -> (Cell) c)
+                .collect(Collectors.toMap(Cell::getKey, c -> c)));
     }
 
     private void refreshBoard() {
@@ -160,24 +169,7 @@ public class ChessBoard extends VerticalLayout implements HasUrlParameter<String
     }
 
     private VerticalLayout printBoard(Color color) {
-        board = new VerticalLayout();
-        board.setSpacing(false);
-        board.addClassName(Styles.CHESS_BOARD_WHITES_STYLE);
-        board.setPadding(false);
-        HorizontalLayout line;
-
-        for (int y = 1; y < 9; ++y) {
-            line = new HorizontalLayout();
-            line.setSpacing(false);
-
-            for (int x = 1; x < 9; ++x) {
-                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
-                line.add(cell);
-                cells.put(cell.getKey(), cell);
-            }
-            board.add(line);
-        }
-
+        board = boardService.reloadBoardFromDB(game.getId());
         if (BLACK.equals(color))
             reverseBoard();
         return board;

@@ -164,7 +164,7 @@ public class MainPage extends VerticalLayout {
                     button.setTooltipText("Spectate");
                 }
                 button.addClickListener(
-                        e -> UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId())));
+                        e -> UI.getCurrent().navigate(ChessBoardView.class, Long.toString(game.getId())));
             } catch (AuthenticationException e) {
                 e.printStackTrace();
             }

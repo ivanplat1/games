@@ -3,6 +3,9 @@ package com.ivpl.games.services;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.ExceptionMessages;
 import com.ivpl.games.constants.GameType;
+import com.ivpl.games.constants.Styles;
+import com.ivpl.games.entity.ui.Cell;
+import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.view.MainPage;
 import com.vaadin.flow.component.ClickEvent;
@@ -25,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static com.ivpl.games.constants.Color.*;
@@ -180,5 +184,27 @@ public class UIComponentsService {
         box.setHeight("50px");
         box.setWidth("50px");
         return box;
+    }
+
+    public VerticalLayout getChessBoard(Map<CellKey, Cell> cells) {
+        cells.clear();
+        VerticalLayout board = new VerticalLayout();
+        board.setSpacing(false);
+        board.addClassName(Styles.CHESS_BOARD_WHITES_STYLE);
+        board.setPadding(false);
+        HorizontalLayout line;
+
+        for (int y = 1; y < 9; ++y) {
+            line = new HorizontalLayout();
+            line.setSpacing(false);
+
+            for (int x = 1; x < 9; ++x) {
+                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
+                line.add(cell);
+                cells.put(cell.getKey(), cell);
+            }
+            board.add(line);
+        }
+        return board;
     }
 }
