@@ -34,7 +34,6 @@ public abstract class AbstractPieceView extends Div {
     protected final  transient Map<CellKey, AbstractPieceView> piecesToBeEaten = new HashMap<>();
     protected final transient Set<CellKey> possibleSteps = new HashSet<>();
     protected final LinkedList<Step> steps = new LinkedList<>();
-    protected boolean shouldStopCalculationForDirection;
 
     protected AbstractPieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         this.pieceId = pieceId;

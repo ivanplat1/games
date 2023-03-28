@@ -13,7 +13,6 @@ import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.PieceRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.utils.CommonUtils;
-import com.ivpl.games.view.ChessBoardView;
 import com.vaadin.flow.component.UI;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,14 +53,14 @@ public class GameService {
         game.setColorPlayer2(CommonUtils.getOppositeColor(selectedColor));
         gameRepository.saveAndFlush(game);
         createPieces(game.getId(), gameType);
-        UI.getCurrent().navigate(ChessBoardView.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(gameType), Long.toString(game.getId()));
     }
 
     public void joinGame(Game game, User user) {
         game.setPlayer2Id(user.getId());
         game.setStatus(GameStatus.IN_PROGRESS);
         gameRepository.saveAndFlush(game);
-        UI.getCurrent().navigate(ChessBoardView.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId()));
     }
 
     public void saveStep(Long gameId,

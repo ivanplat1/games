@@ -70,7 +70,7 @@ public class UIComponentsService {
         return new Button(LOGOUT_STR, new Icon(VaadinIcon.EXIT_O), click -> securityService.logout());
     }
 
-    public static Div getTurnIndicator(Color color) {
+    public Div getTurnIndicator(Color color) {
         Div indicator = getFixedBoxWithBorder();
         indicator.setId(color.name());
         switch(color) {

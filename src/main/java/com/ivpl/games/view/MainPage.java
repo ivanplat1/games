@@ -8,6 +8,7 @@ import com.ivpl.games.repository.UserRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
+import com.ivpl.games.utils.CommonUtils;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
@@ -164,7 +165,7 @@ public class MainPage extends VerticalLayout {
                     button.setTooltipText("Spectate");
                 }
                 button.addClickListener(
-                        e -> UI.getCurrent().navigate(ChessBoardView.class, Long.toString(game.getId())));
+                        e -> UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId())));
             } catch (AuthenticationException e) {
                 e.printStackTrace();
             }
