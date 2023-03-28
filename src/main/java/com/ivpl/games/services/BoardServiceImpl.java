@@ -44,7 +44,6 @@ public class BoardServiceImpl implements BoardService {
         pieces.stream().filter(p -> p.getPosition() != null)
                 .forEach(p -> {
                     p.getPosition().setPiece(p);
-                    //addPieceListener(game, p, selectedPiece, cells);
                     p.getSteps().clear();
                     p.getSteps().addAll(stepRepository.findAllByGameIdAndPieceIdOrderByGameStepId(game.getId(), p.getPieceId()));
                 });
