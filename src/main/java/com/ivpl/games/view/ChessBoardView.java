@@ -1,6 +1,7 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.*;
+import com.ivpl.games.entity.ChessBoardContainer;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
@@ -90,7 +91,7 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
         UI ui = attachEvent.getUI();
         broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
             if (this.hashCode() != e)
-                ui.access(this::refreshBoard);
+                ui.access(() -> restoreGame(game.getId()));
         });
     }
 
@@ -113,82 +114,28 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
                         steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
                         recognizeUser();
                         currentTurn = game.getTurn();
+                        pieces.clear();
+                        cells.clear();
                         drawNewBoard();
-                        reloadAndPlacePieces();
-                        recalculatePossibleSteps();
+                        if (BLACK.equals(playerColor))
+                            reverseBoard();
                     } catch (AuthenticationException e) {
                         e.printStackTrace();
                     }
                 }, uiComponentsService::showGameNotFoundMessage);
-        cells.clear();
-        cells.putAll(board.getChildren().filter(Cell.class::isInstance)
-                .map(c -> (Cell) c)
-                .collect(Collectors.toMap(Cell::getKey, c -> c)));
-    }
-
-    private void refreshBoard() {
-        gameRepository.findById(game.getId()).ifPresent(g ->
-        {
-            if (g.getWinner() != null) gameOver();
-
-            cleanUpAll();
-            game = g;
-            steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-            currentTurn = game.getTurn();
-            drawNewBoard();
-            reloadAndPlacePieces();
-            recalculatePossibleSteps();
-        });
+        pieces.forEach(this::addPieceListener);
     }
 
     private void drawNewBoard() {
+        ChessBoardContainer boardContainer = boardService.reloadBoardFromDB(game.getId(), playerColor);
+        board = boardContainer.getBoardLayout();
+        pieces.addAll(boardContainer.getPieces());
+        cells.putAll(boardContainer.getCells());
+
         add(uiComponentsService.getHeaderWithGoToLobby());
-        HorizontalLayout mainLayout = new HorizontalLayout(printBoard(playerColor), createRightSidebar());
+        HorizontalLayout mainLayout = new HorizontalLayout(board, createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
-    }
-
-    private void cleanUpAll() {
-        selectedPiece = null;
-        cells.clear();
-        isAnythingEaten = false;
-        steps = null;
-        removeAll();
-    }
-
-    private void reloadAndPlacePieces() {
-        pieces.clear();
-        pieces.addAll(gameService.loadPieceViewsForGame(game.getId(), cells));
-        pieces.stream().filter(p -> p.getPosition() != null)
-                .forEach(p -> {
-                    p.getPosition().setPiece(p);
-                    addPieceListener(p);
-                    p.getSteps().clear();
-                    p.getSteps().addAll(stepRepository.findAllByGameIdAndPieceIdOrderByGameStepId(game.getId(), p.getPieceId()));
-                });
-    }
-
-    private VerticalLayout printBoard(Color color) {
-        board = boardService.reloadBoardFromDB(game.getId());
-        if (BLACK.equals(color))
-            reverseBoard();
-        return board;
-    }
-
-    private void recalculatePossibleSteps() {
-        removeCellsHighlights();
-        if (!currentTurn.equals(playerColor)) return;
-        pieces.stream()
-                .filter(p -> p.getPosition() != null && currentTurn.equals(p.getColor()))
-                .forEach(p -> p.calculatePossibleSteps(cells));
-
-        boolean haveToEatAnything = gameTypeIsCheckers() && pieces.stream()
-                .filter(f -> currentTurn.equals(f.getColor()))
-                .anyMatch(f -> !f.getPiecesToBeEaten().isEmpty());
-
-        if (haveToEatAnything)
-            pieces.stream().filter(f -> f.getPiecesToBeEaten().isEmpty())
-                    .forEach(f -> f.getPossibleSteps().clear());
     }
 
     private void checkIsGameOver() {
@@ -330,7 +277,7 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
             checkIsGameOver();
             currentTurn = CommonUtils.getOppositeColor(currentTurn);
             revertTurn();
-            recalculatePossibleSteps();
+            //recalculatePossibleSteps();
             selectedPiece = null;
 
             if (cell.equals(event.getSource())) {
