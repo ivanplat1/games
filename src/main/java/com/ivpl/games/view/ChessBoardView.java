@@ -29,6 +29,7 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.*;
 import com.vaadin.flow.shared.Registration;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.apache.tomcat.websocket.AuthenticationException;
 
 import javax.annotation.security.PermitAll;
@@ -91,7 +92,10 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
         UI ui = attachEvent.getUI();
         broadcasterRegistration = broadcasterService.registerBroadcasterListener(game.getId(), e -> {
             if (this.hashCode() != e)
-                ui.access(() -> restoreGame(game.getId()));
+                ui.access(() -> {
+                    reloadGameFromRepository(game.getId());
+                    restoreGame();
+                });
         });
     }
 
@@ -100,34 +104,28 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
         Optional.ofNullable(broadcasterRegistration).ifPresent(Registration::remove);
     }
 
+    @SneakyThrows
     @Override
     public void setParameter(BeforeEvent event, String gameId) {
-        restoreGame(Long.valueOf(gameId));
+        reloadGameFromRepository(Long.valueOf(gameId));
+        recognizeUser();
+        restoreGame();
     }
 
-    private void restoreGame(Long gameId) {
-        gameRepository.findById(gameId)
-                .filter(Game::isActive)
-                .ifPresentOrElse(g -> {
-                    try {
-                        game = g;
-                        steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
-                        recognizeUser();
-                        currentTurn = game.getTurn();
-                        pieces.clear();
-                        cells.clear();
-                        drawNewBoard();
-                        if (BLACK.equals(playerColor))
-                            reverseBoard();
-                    } catch (AuthenticationException e) {
-                        e.printStackTrace();
-                    }
-                }, uiComponentsService::showGameNotFoundMessage);
+    private void restoreGame() {
+        steps = stepRepository.findAllByGameIdOrderByGameStepId(game.getId());
+        currentTurn = game.getTurn();
+        pieces.clear();
+        cells.clear();
+        drawNewBoard();
+        if (BLACK.equals(playerColor))
+            reverseBoard();
         pieces.forEach(this::addPieceListener);
     }
 
     private void drawNewBoard() {
-        ChessBoardContainer boardContainer = boardService.reloadBoardFromDB(game.getId(), playerColor);
+        removeAll();
+        ChessBoardContainer boardContainer = boardService.reloadBoard(game.getId(), playerColor);
         board = boardContainer.getBoardLayout();
         pieces.addAll(boardContainer.getPieces());
         cells.putAll(boardContainer.getCells());
@@ -277,7 +275,6 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
             checkIsGameOver();
             currentTurn = CommonUtils.getOppositeColor(currentTurn);
             revertTurn();
-            //recalculatePossibleSteps();
             selectedPiece = null;
 
             if (cell.equals(event.getSource())) {
@@ -288,5 +285,9 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
 
     private boolean gameTypeIsCheckers() {
         return GameType.CHECKERS.equals(game.getType());
+    }
+
+    private void reloadGameFromRepository(Long gameId) {
+        gameRepository.findById(gameId).ifPresentOrElse(g -> game = g, uiComponentsService::showGameNotFoundMessage);
     }
 }

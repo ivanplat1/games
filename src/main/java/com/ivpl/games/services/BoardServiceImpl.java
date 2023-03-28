@@ -35,7 +35,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     @Override
-    public ChessBoardContainer reloadBoardFromDB(Long gameId, Color playerColor) {
+    public ChessBoardContainer reloadBoard(Long gameId, Color playerColor) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
         Map<CellKey, Cell> cells = new LinkedHashMap<>();

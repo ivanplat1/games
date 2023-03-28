@@ -7,7 +7,7 @@ import com.ivpl.games.entity.ui.CellKey;
 
 public interface BoardService {
 
-    ChessBoardContainer reloadBoardFromDB(Long gameId, Color playerColor);
+    ChessBoardContainer reloadBoard(Long gameId, Color playerColor);
 
     void doStep(Long gameId, AbstractPieceView selectedPiece, CellKey cellKey);
 }
