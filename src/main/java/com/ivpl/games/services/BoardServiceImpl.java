@@ -51,8 +51,8 @@ public class BoardServiceImpl implements BoardService {
         // calculate possible steps for pieces
         if (game.getTurn().equals(playerColor)) {
             pieces.stream()
-                    .filter(p -> p.getPosition() != null)
-                    .forEach(p -> p.calculatePossibleSteps(cells));
+                    .filter(p -> p.getPosition() != null && game.getTurn().equals(p.getColor()))
+                    .forEach(p -> p.calculatePossibleSteps(cells, true));
 
             boolean haveToEatAnything = GameType.CHECKERS.equals(game.getType()) && pieces.stream()
                     .filter(f -> game.getTurn().equals(f.getColor()))

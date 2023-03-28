@@ -257,7 +257,7 @@ public class ChessBoardView extends VerticalLayout implements HasUrlParameter<St
 
             if (gameTypeIsCheckers() && isAnythingEaten) {
                 removeCellsHighlights();
-                selectedPiece.calculatePossibleSteps(cells);
+                selectedPiece.calculatePossibleSteps(cells, true);
                 // if still have anything to eat
                 if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
                     gameService.saveStep(game.getId(),

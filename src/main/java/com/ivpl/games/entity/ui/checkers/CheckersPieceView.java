@@ -20,7 +20,7 @@ public abstract class CheckersPieceView extends AbstractPieceView {
         super(pieceId, dbId, color, type, position);
     }
 
-    public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
+    public void calculatePossibleSteps(Map<CellKey, Cell> cells, boolean checkValidationNeeded) {
         possibleSteps.clear();
         piecesToBeEaten.clear();
         Set<CellKey> eatingCells = new HashSet<>();

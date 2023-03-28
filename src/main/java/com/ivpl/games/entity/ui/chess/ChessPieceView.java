@@ -15,6 +15,7 @@ import static com.ivpl.games.constants.Constants.PIECE_IMAGE_ALT;
 public abstract class ChessPieceView extends AbstractPieceView {
 
     private static final String IMAGE_PATH_STR = "images/chess/%s.png";
+    private boolean kingIsUnderAttack;
 
     protected ChessPieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         super(pieceId, dbId, color, type, position);
@@ -26,7 +27,7 @@ public abstract class ChessPieceView extends AbstractPieceView {
     }
 
     @Override
-    public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
+    public void calculatePossibleSteps(Map<CellKey, Cell> cells, boolean checkValidationNeeded) {
         possibleSteps.clear();
         piecesToBeEaten.clear();
         CellKey currentPosition = position.getKey();
@@ -51,9 +52,31 @@ public abstract class ChessPieceView extends AbstractPieceView {
                                             shouldStopCalculationForDirection = true;
                                             piecesToBeEaten.put(targetCell.getKey(), targetCell.getPiece());
                                         }
-                                        possibleSteps.add(targetCell.getKey());
+                                        if (!checkValidationNeeded || !isStepLeadsToCheck(cells, targetCell))
+                                            possibleSteps.add(targetCell.getKey());
                                     });
                         }
                 );
+    }
+
+    private boolean isStepLeadsToCheck(Map<CellKey, Cell> cells, Cell targetCell) {
+        Cell currentPosition = getPosition();
+        AbstractPieceView pieceOnTargetCell = targetCell.getPiece();
+        placeAt(targetCell);
+        kingIsUnderAttack = false;
+        cells.values().stream()
+                .takeWhile(e -> !kingIsUnderAttack)
+                .filter(Cell::isOccupied)
+                .map(Cell::getPiece)
+                .filter(p -> !color.equals(p.getColor()))
+                .forEach(p -> {
+                    p.calculatePossibleSteps(cells, false);
+                    if (p.getPiecesToBeEaten().values().stream()
+                            .anyMatch(piece -> PieceType.KING.equals(piece.getType())))
+                        kingIsUnderAttack = true;
+                });
+        placeAt(currentPosition);
+        Optional.ofNullable(pieceOnTargetCell).ifPresent(p -> targetCell.setPiece(pieceOnTargetCell));
+        return kingIsUnderAttack;
     }
 }
