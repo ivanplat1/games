@@ -44,7 +44,8 @@ public abstract class AbstractPieceView extends Div {
         add(getImage());
     }
 
-    public abstract void calculatePossibleSteps(Map<CellKey, Cell> cells, boolean checkValidationNeeded);
+    public abstract void calculatePossibleSteps(Map<CellKey, Cell> cells,
+            /* if true checks is king under attack after step */ boolean checkValidationNeeded);
 
     @NonNull
     public void placeAt(Cell targetCell) {

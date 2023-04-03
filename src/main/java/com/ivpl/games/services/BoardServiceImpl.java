@@ -9,11 +9,13 @@ import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
+import com.ivpl.games.entity.ui.chess.RookView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
 import com.ivpl.games.view.AbstractBoardView;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import org.apache.commons.lang3.Range;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -62,7 +64,12 @@ public class BoardServiceImpl implements BoardService {
         if (game.getTurn().equals(boardView.getPlayerColor())) {
             pieces.stream()
                     .filter(p -> p.getPosition() != null && game.getTurn().equals(p.getColor()))
-                    .forEach(p -> p.calculatePossibleSteps(cells, true));
+                    .forEach(p -> {
+                        p.calculatePossibleSteps(cells, true);
+                        if (PieceType.KING.equals(p.getType())) {
+                            calculateCastlingSteps(game, p, cells);
+                        }
+                    });
 
             boolean haveToEatAnything = GameType.CHECKERS.equals(game.getType()) && pieces.stream()
                     .filter(f -> game.getTurn().equals(f.getColor()))
@@ -98,6 +105,7 @@ public class BoardServiceImpl implements BoardService {
     }
 
     private void addCellListener(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractBoardView boardView) {
+        if (cell.getOnClickListener() != null) return;
         AtomicReference<AbstractPieceView> selectedPiece = boardView.getSelectedPiece();
         cell.setOnClickListener(cell.addClickListener(event -> {
             AtomicBoolean isAnythingEaten = new AtomicBoolean(false);
@@ -114,17 +122,15 @@ public class BoardServiceImpl implements BoardService {
                 selectedPiece.get().calculatePossibleSteps(cells, true);
                 // if still have anything to eat
                 if (!selectedPiece.get().getPiecesToBeEaten().isEmpty()) {
-                    gameService.saveStep(game.getId(),
-                            boardView.getPlayerColor(), cell.getKey(),
-                            selectedPiece.get().getPieceId(), selectedPiece.get().getDbId(), false);
+                    gameService.saveStep(game.getId(), cell.getKey(),
+                            selectedPiece.get(), false);
                     broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
                     return;
                 }
                 isAnythingEaten.set(false);
             }
-            gameService.saveStep(game.getId(),
-                    boardView.getPlayerColor(), cell.getKey(),
-                    selectedPiece.get().getPieceId(), selectedPiece.get().getDbId(), true);
+            gameService.saveStep(game.getId(), cell.getKey(),
+                    selectedPiece.get(), true);
             broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
         }));
     }
@@ -141,5 +147,44 @@ public class BoardServiceImpl implements BoardService {
 
     private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
         return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
+    }
+
+    private void calculateCastlingSteps(Game game, AbstractPieceView kingPiece, Map<CellKey, Cell> cells) {
+        if (kingPiece.getSteps().isEmpty()) {
+            cells.values().stream().filter(Cell::isOccupied)
+                    .map(Cell::getPiece)
+                    .filter(p -> kingPiece.getColor().equals(p.getColor()) && PieceType.ROOK.equals(p.getType()))
+                    .filter(rook -> rook.getSteps().isEmpty())
+                    .map(p -> (RookView) p)
+                    .filter(rook -> isRookCastlingPossible(cells, rook))
+                    .forEach(rook -> {
+                        int x = rook.getPosition().getKey().getX();
+                        int y = rook.getPosition().getKey().getY();
+                        Cell cell = cells.get(new CellKey(x == 1 ? 3 : 7, y));
+                        cell.setOnClickListener(cell.addClickListener(event -> {
+                            // move king
+                            gameService.saveStep(game.getId(), cell.getKey(),
+                                    kingPiece, false);
+                            kingPiece.getPossibleSteps().add(cell.getKey());
+                            // move rook
+                            gameService.saveStep(game.getId(), new CellKey(x == 1 ? 4 : 6, y),
+                                    rook, true);
+                            broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
+                        }));
+                        kingPiece.getPossibleSteps().add(cell.getKey());
+                    });
+        }
+    }
+
+    private boolean isRookCastlingPossible(Map<CellKey, Cell> cells, RookView rook) {
+        int x = rook.getPosition().getKey().getX();
+        int y = rook.getPosition().getKey().getY();
+        return cells.entrySet().stream()
+                .filter(e -> e.getKey().getY() == y &&
+                        ((x == 1 && Range.between(2, 4).contains(e.getKey().getX()))
+                                || (x == 8 && Range.between(6, 7).contains(e.getKey().getX())))
+                )
+                .map(Map.Entry::getValue)
+                .noneMatch(Cell::isOccupied);
     }
 }

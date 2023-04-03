@@ -64,16 +64,14 @@ public class GameService {
     }
 
     public void saveStep(Long gameId,
-                         Color playerColor,
                          CellKey to,
-                         Long pieceId,
-                         Long pieceDBId,
+                         AbstractPieceView pieceView,
                          boolean changeColor) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
-        Piece piece = pieceRepository.findPieceById(pieceDBId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceDBId)));
-        Step step = new Step(gameId, increaseStepCount(game), playerColor, new CellKey(piece.getPosition()), to, pieceId);
+        Piece piece = pieceRepository.findPieceById(pieceView.getDbId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceView.getDbId())));
+        Step step = new Step(gameId, increaseStepCount(game), piece.getColor(), new CellKey(piece.getPosition()), to, pieceView.getPieceId());
         stepRepository.saveAndFlush(step);
         piece.setPosition(to.getAsArray());
         pieceRepository.saveAndFlush(piece);
