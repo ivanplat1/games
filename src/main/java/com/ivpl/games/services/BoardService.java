@@ -1,13 +1,9 @@
 package com.ivpl.games.services;
 
-import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.ChessBoardContainer;
-import com.ivpl.games.entity.ui.AbstractPieceView;
-import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.view.AbstractBoardView;
 
 public interface BoardService {
 
-    ChessBoardContainer reloadBoard(Long gameId, Color playerColor);
-
-    void doStep(Long gameId, AbstractPieceView selectedPiece, CellKey cellKey);
+    ChessBoardContainer reloadBoard(Long gameId, AbstractBoardView boardView);
 }

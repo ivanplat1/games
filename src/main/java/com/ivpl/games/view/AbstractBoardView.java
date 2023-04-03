@@ -6,7 +6,6 @@ import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.entity.ui.*;
-import com.ivpl.games.entity.ui.checkers.CheckerQueenView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
@@ -31,9 +30,9 @@ import lombok.SneakyThrows;
 import org.apache.tomcat.websocket.AuthenticationException;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.ivpl.games.constants.Color.BLACK;
-import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.*;
 
 @CssImport("./styles/styles.css")
@@ -50,14 +49,13 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
     Registration broadcasterRegistration;
 
     protected transient Game game;
+    @Getter
     private Color playerColor;
     @Getter
     protected Color currentTurn;
     @Getter
-    private AbstractPieceView selectedPiece;
-    private final Map<CellKey, Cell> cells = new LinkedHashMap<>();
+    private final AtomicReference<AbstractPieceView> selectedPiece = new AtomicReference<>();
     protected final transient List<AbstractPieceView> pieces = new ArrayList<>();
-    private boolean isAnythingEaten;
     private VerticalLayout board;
     private transient LinkedList<Step> steps;
 
@@ -108,20 +106,19 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
         drawNewBoard();
         if (BLACK.equals(playerColor))
             reverseBoard();
-        pieces.forEach(this::addPieceListener);
     }
 
     private void drawNewBoard() {
         removeAll();
-        ChessBoardContainer boardContainer = boardService.reloadBoard(game.getId(), playerColor);
+        ChessBoardContainer boardContainer = boardService.reloadBoard(game.getId(), this);
         board = boardContainer.getBoardLayout();
         pieces.addAll(boardContainer.getPieces());
-        cells.putAll(boardContainer.getCells());
 
         add(uiComponentsService.getHeaderWithGoToLobby());
         HorizontalLayout mainLayout = new HorizontalLayout(board, createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
+        checkIsGameOver();
     }
 
     protected abstract void checkIsGameOver();
@@ -136,17 +133,6 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
         dialog.add(dialogLayout);
         add(dialog);
         dialog.open();
-    }
-
-    private void replaceWithQueenIfNeeded(Cell cell, AbstractPieceView piece) {
-        if (gameTypeIsCheckers() && isBorderCell(cell.getKey(), piece.getColor())) {
-            CheckerQueenView checkerQueenView = new CheckerQueenView(piece.getPieceId(), piece.getDbId(), piece.getColor(), PieceType.CHECKER_QUEEN, cell);
-            addPieceListener(checkerQueenView);
-            cell.remove(selectedPiece);
-            cell.setPiece(checkerQueenView);
-            selectedPiece = checkerQueenView;
-            gameService.mutatePiece(piece.getDbId(), PieceType.CHECKER_QUEEN);
-        }
     }
 
     private VerticalLayout createRightSidebar() {
@@ -178,72 +164,9 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
         }
     }
 
-    private boolean isBorderCell(CellKey cellKey, Color pieceColor) {
-        return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
-    }
-
-    private void addPieceListener(AbstractPieceView p) {
-        p.setOnClickListener(p.addClickListener(e -> {
-            if (p.getPossibleSteps().isEmpty() || !currentTurn.equals(p.getColor())) return;
-            p.selectUnselectPiece();
-            if (!p.equals(selectedPiece)) {
-                if (selectedPiece != null) {
-                    selectedPiece.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                    selectedPiece.unselectPiece();
-                }
-
-                p.getPossibleSteps().forEach(k -> {
-                    Cell cell = cells.get(k);
-                    cell.addSelectedStyle();
-                    addCellListener(cell);
-                });
-                selectedPiece = p;
-            } else {
-                p.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                selectedPiece = null;
-            }
-        }));
-    }
-
-    private void addCellListener(Cell cell) {
-        cell.setOnClickListener(cell.addClickListener(event -> {
-            Optional.ofNullable(selectedPiece.getPiecesToBeEaten().get(cell.getKey()))
-                    .ifPresent(f -> {
-                        f.toDie();
-                        gameService.killPiece(f.getDbId());
-                        isAnythingEaten = true;
-                    });
-            selectedPiece.placeAt(cell);
-            replaceWithQueenIfNeeded(cell, selectedPiece);
-
-            if (gameTypeIsCheckers() && isAnythingEaten) {
-                selectedPiece.calculatePossibleSteps(cells, true);
-                // if still have anything to eat
-                if (!selectedPiece.getPiecesToBeEaten().isEmpty()) {
-                    gameService.saveStep(game.getId(),
-                            playerColor, cell.getKey(),
-                            selectedPiece.getPieceId(), selectedPiece.getDbId(), false);
-                    broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
-                    return;
-                }
-                isAnythingEaten = false;
-            }
-            gameService.saveStep(game.getId(),
-                    playerColor, cell.getKey(),
-                    selectedPiece.getPieceId(), selectedPiece.getDbId(), true);
-            checkIsGameOver();
-            broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
-        }));
-    }
-
-    private boolean gameTypeIsCheckers() {
-        return GameType.CHECKERS.equals(game.getType());
-    }
-
     private void cleanupVariables() {
-        selectedPiece = null;
+        selectedPiece.set(null);
         pieces.clear();
-        cells.clear();
     }
 
     private void reloadGameFromRepository(Long gameId) {

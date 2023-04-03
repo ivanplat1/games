@@ -59,7 +59,7 @@ public abstract class ChessPieceView extends AbstractPieceView {
                 );
     }
 
-    private boolean isStepLeadsToCheck(Map<CellKey, Cell> cells, Cell targetCell) {
+    protected boolean isStepLeadsToCheck(Map<CellKey, Cell> cells, Cell targetCell) {
         Cell currentPosition = getPosition();
         AbstractPieceView pieceOnTargetCell = targetCell.getPiece();
         placeAt(targetCell);
