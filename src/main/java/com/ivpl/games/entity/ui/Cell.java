@@ -55,6 +55,9 @@ public class Cell extends Div {
 
     public void removeSelectedStyle() {
         getStyle().remove(Styles.FILTER_PROP);
+    }
+
+    public void clearListener() {
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
         onClickListener = null;
     }

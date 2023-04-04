@@ -10,7 +10,6 @@ import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.security.SecurityService;
 import com.ivpl.games.services.BoardService;
-import com.ivpl.games.services.BoardServiceImpl;
 import com.ivpl.games.services.GameService;
 import com.ivpl.games.services.UIComponentsService;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
@@ -60,12 +59,12 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
     private transient LinkedList<Step> steps;
 
     protected AbstractBoardView(UIComponentsService uiComponentsService,
-                             BroadcasterService broadcasterService,
-                             GameRepository gameRepository,
-                             GameService gameService,
-                             SecurityService securityService,
-                             StepRepository stepRepository,
-                             BoardServiceImpl boardService) {
+                                BroadcasterService broadcasterService,
+                                GameRepository gameRepository,
+                                GameService gameService,
+                                SecurityService securityService,
+                                StepRepository stepRepository,
+                                BoardService boardService) {
         this.uiComponentsService = uiComponentsService;
         this.broadcasterService = broadcasterService;
         this.gameRepository = gameRepository;
