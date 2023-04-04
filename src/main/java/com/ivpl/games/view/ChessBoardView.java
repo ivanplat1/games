@@ -27,9 +27,4 @@ public class ChessBoardView extends AbstractBoardView {
                           ChessBoardServiceImpl boardService) {
         super(uiComponentsService, broadcasterService, gameRepository, gameService, securityService, stepRepository, boardService);
     }
-
-    @Override
-    public void checkIsGameOver() {
-
-    }
 }

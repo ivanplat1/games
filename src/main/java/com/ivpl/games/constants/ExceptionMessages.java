@@ -13,4 +13,5 @@ public final class ExceptionMessages {
     public static final String DIRECTIONS_ARE_NOT_IMPLEMENTED = "Directions are not implemented for Item child class %s";
     public static final String PAGE_SHOULD_NOT_BE_AVAILABLE = "Page should not be available for unauthorized users.";
     public static final String VIEW_BOARD_IS_NOT_FOUND_FOR_GAME_TYPE = "View is not found for GameType %s.";
+    public static final String KING_NOT_FOUND = "How have you eaten King???";
 }

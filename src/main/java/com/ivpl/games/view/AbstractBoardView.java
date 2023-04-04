@@ -1,7 +1,7 @@
 package com.ivpl.games.view;
 
 import com.ivpl.games.constants.*;
-import com.ivpl.games.entity.ChessBoardContainer;
+import com.ivpl.games.entity.BoardContainer;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
@@ -109,7 +109,7 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
 
     private void drawNewBoard() {
         removeAll();
-        ChessBoardContainer boardContainer = boardService.reloadBoard(game.getId(), this);
+        BoardContainer boardContainer = boardService.reloadBoard(game.getId(), this);
         board = boardContainer.getBoardLayout();
         pieces.addAll(boardContainer.getPieces());
 
@@ -117,15 +117,13 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
         HorizontalLayout mainLayout = new HorizontalLayout(board, createRightSidebar());
         mainLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         add(mainLayout);
-        checkIsGameOver();
+        Optional.ofNullable(game.getWinner()).ifPresent(this::gameOver);
     }
 
-    protected abstract void checkIsGameOver();
-
-    protected void gameOver() {
+    protected void gameOver(Color winner) {
         Dialog dialog = new Dialog();
         dialog.setHeaderTitle(GAME_OVER_STR);
-        VerticalLayout dialogLayout = new VerticalLayout(new Label(currentTurn.toString() + " wins!"));
+        VerticalLayout dialogLayout = new VerticalLayout(new Label(winner.toString() + " wins!"));
         dialogLayout.setAlignItems(Alignment.CENTER);
         Button okButton = uiComponentsService.getGoToLobbyButtonForDialog(dialog);
         dialog.getFooter().add(okButton);

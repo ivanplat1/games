@@ -10,14 +10,14 @@ import java.util.List;
 import java.util.Map;
 
 @Getter
-public class ChessBoardContainer {
+public class BoardContainer {
 
     private final VerticalLayout boardLayout;
     private final List<AbstractPieceView> pieces;
     private final Map<CellKey, Cell> cells;
 
 
-    public ChessBoardContainer(VerticalLayout boardLayout, List<AbstractPieceView> pieces, Map<CellKey, Cell> cells) {
+    public BoardContainer(VerticalLayout boardLayout, List<AbstractPieceView> pieces, Map<CellKey, Cell> cells) {
         this.boardLayout = boardLayout;
         this.pieces = pieces;
         this.cells = cells;
