@@ -40,16 +40,21 @@ public class KingView extends ChessPieceView {
         return cells.entrySet().stream()
                 .filter(e -> e.getKey().getY() == y &&
                         ((x == 1 && Range.between(2, 4).contains(e.getKey().getX())
-                                && !CommonUtils.isAnyCellUnderAttack(color, cells,
+                                && cellsSuitForCastling(color, cells,
                                 new CellKey(2, y),
                                 new CellKey(3, y),
                                 new CellKey(4, y)))
                                 || (x == 8 && Range.between(6, 7).contains(e.getKey().getX())
-                                && !CommonUtils.isAnyCellUnderAttack(color, cells,
+                                && cellsSuitForCastling(color, cells,
                                 new CellKey(6, y),
                                 new CellKey(7, y))))
                 )
                 .map(Map.Entry::getValue)
                 .anyMatch(c -> !c.isOccupied());
+    }
+
+    private boolean cellsSuitForCastling(Color playerColor, Map<CellKey, Cell> cells, CellKey ... keys) {
+        return !CommonUtils.isAnyCellUnderAttack(playerColor, cells, keys)
+                && CommonUtils.cellsAreNotOccupied(cells, keys);
     }
 }

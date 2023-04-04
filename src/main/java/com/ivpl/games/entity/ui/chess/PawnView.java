@@ -20,10 +20,13 @@ public class PawnView extends ChessPieceView {
     @Override
     protected Map<String, LinkedList<int[]>> getDirections() {
         Map<String, LinkedList<int[]>> directions = DirectionsForClassRepo.getDirectionsForType(getType());
-        Map<String, LinkedList<int[]>> directionsNew = new HashMap<>(directions);
-        LinkedList<int[]> newDir = new LinkedList<>(directions.get(PAWN_FORWARD_DIRECTION_KEY));
-        newDir.add(new int[]{2,0});
-        directionsNew.put(PAWN_FORWARD_DIRECTION_KEY, newDir);
-        return directionsNew;
+        if (steps.isEmpty()) {
+            Map<String, LinkedList<int[]>> directionsNew = new HashMap<>(directions);
+            LinkedList<int[]> newDir = new LinkedList<>(directions.get(PAWN_FORWARD_DIRECTION_KEY));
+            newDir.add(new int[]{2,0});
+            directionsNew.put(PAWN_FORWARD_DIRECTION_KEY, newDir);
+            directions = directionsNew;
+        }
+        return directions;
     }
 }

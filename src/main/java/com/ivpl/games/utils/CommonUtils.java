@@ -9,6 +9,7 @@ import com.ivpl.games.view.AbstractBoardView;
 import com.ivpl.games.view.CheckersBoardView;
 import com.ivpl.games.view.ChessBoardView;
 
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,5 +46,9 @@ public class CommonUtils {
         return CommonUtils.getPiecesFromCells(cells).stream()
                 .filter(p -> !playerColor.equals(p.getColor()))
                 .anyMatch(p -> p.getPossibleSteps().stream().anyMatch(k -> Arrays.asList(keys).contains(k)));
+    }
+
+    public static boolean cellsAreNotOccupied(Map<CellKey, Cell> cells, CellKey ... keys) {
+        return Arrays.stream(keys).noneMatch(c -> cells.get(c).isOccupied());
     }
 }
