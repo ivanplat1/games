@@ -33,6 +33,7 @@ import java.util.Optional;
 
 import static com.ivpl.games.constants.Color.*;
 import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.ExceptionMessages.COLOR_WAS_NOT_RECOGNIZED;
 import static com.ivpl.games.constants.Styles.*;
 
 @Component
@@ -77,6 +78,7 @@ public class UIComponentsService {
             case BLACK -> indicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
             case WHITE -> indicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
             case RANDOM -> indicator.getStyle().set(BACKGROUND, RANDOM_SELECTOR_BACKGROUND);
+            default -> throw new IllegalArgumentException(COLOR_WAS_NOT_RECOGNIZED);
         }
         indicator.getStyle().set(BORDER_STYLE, "solid");
         return indicator;
