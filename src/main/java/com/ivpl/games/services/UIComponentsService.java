@@ -1,12 +1,12 @@
 package com.ivpl.games.services;
 
-import com.ivpl.games.constants.Color;
-import com.ivpl.games.constants.ExceptionMessages;
-import com.ivpl.games.constants.GameType;
-import com.ivpl.games.constants.Styles;
+import com.ivpl.games.constants.*;
+import com.ivpl.games.converter.PieceToPieceViewConverter;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.entity.ui.chess.*;
 import com.ivpl.games.security.SecurityService;
+import com.ivpl.games.utils.CommonUtils;
 import com.ivpl.games.view.MainPage;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -14,6 +14,8 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -73,7 +75,6 @@ public class UIComponentsService {
 
     public Div getTurnIndicator(Color color) {
         Div indicator = getFixedBoxWithBorder();
-        indicator.setId(color.name());
         switch(color) {
             case BLACK -> indicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
             case WHITE -> indicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
@@ -155,12 +156,15 @@ public class UIComponentsService {
     private HorizontalLayout getColorSelectorLayout() {
         HorizontalLayout layout = new HorizontalLayout();
         Div random = getTurnIndicator(RANDOM);
+        random.setId(RANDOM.name());
         Icon ico = new Icon(VaadinIcon.QUESTION);
         random.add(ico);
         random.addClickListener(colorSelectorDialogListener(layout));
         Div black = getTurnIndicator(BLACK);
+        black.setId(BLACK.name());
         black.addClickListener(colorSelectorDialogListener(layout));
         Div white = getTurnIndicator(WHITE);
+        white.setId(WHITE.name());
         white.addClickListener(colorSelectorDialogListener(layout));
         layout.add(white, random, black);
         return layout;
@@ -208,5 +212,22 @@ public class UIComponentsService {
             board.add(line);
         }
         return board;
+    }
+
+    public ContextMenu getPieceSelectorContextMenu(Cell cell, Color color, ComponentEventListener<ClickEvent<MenuItem>> action) {
+        ContextMenu menu = new ContextMenu();
+        addMenuItemForPieceSelector(menu, color, QueenView.class, action);
+        addMenuItemForPieceSelector(menu, color, HorseView.class, action);
+        addMenuItemForPieceSelector(menu, color, RookView.class, action);
+        addMenuItemForPieceSelector(menu, color, BishopView.class, action);
+        menu.setOpenOnClick(true);
+        menu.setTarget(cell);
+        return menu;
+    }
+
+    public void addMenuItemForPieceSelector(ContextMenu menu, Color pieceColor, Class<? extends ChessPieceView> clazz, ComponentEventListener<ClickEvent<MenuItem>> action) {
+        Div div = getTurnIndicator(CommonUtils.getOppositeColor(pieceColor));
+        div.add(new Image(String.format(ChessPieceView.IMAGE_PATH_STR, CommonUtils.calculateImageName(pieceColor, clazz)), PIECE_IMAGE_ALT));
+        menu.addItem(div, action).setId(PieceToPieceViewConverter.getTypeByClass(clazz).name());
     }
 }

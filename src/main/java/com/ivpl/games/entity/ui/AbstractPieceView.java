@@ -3,10 +3,8 @@ package com.ivpl.games.entity.ui;
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.constants.Styles;
-import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.utils.DirectionsForClassRepo;
-import com.ivpl.games.view.AbstractBoardView;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
 import com.vaadin.flow.dom.Style;
@@ -84,9 +82,5 @@ public abstract class AbstractPieceView extends Div {
         position.removePiece();
         position = null;
         isAlive = false;
-    }
-
-    protected String calculateImageName() {
-        return Strings.concat(getColor().name(), getClass().getSimpleName());
     }
 }

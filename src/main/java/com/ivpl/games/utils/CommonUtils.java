@@ -8,6 +8,7 @@ import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.view.AbstractBoardView;
 import com.ivpl.games.view.CheckersBoardView;
 import com.ivpl.games.view.ChessBoardView;
+import org.apache.logging.log4j.util.Strings;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -50,5 +51,13 @@ public class CommonUtils {
 
     public static boolean cellsAreNotOccupied(Map<CellKey, Cell> cells, CellKey ... keys) {
         return Arrays.stream(keys).noneMatch(c -> cells.get(c).isOccupied());
+    }
+
+    public static boolean isBorderCell(CellKey key, Color pieceColor) {
+        return WHITE.equals(pieceColor) ? key.getY() == 1 : key.getY() == 8;
+    }
+
+    public static String calculateImageName(Color color, Class<? extends AbstractPieceView> clazz) {
+        return Strings.concat(color.name(), clazz.getSimpleName());
     }
 }

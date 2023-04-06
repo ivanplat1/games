@@ -44,4 +44,12 @@ public class PieceToPieceViewConverter {
             throw new IllegalArgumentException(String.format(CANNOT_FIND_VIEW_FOR_PIECE, source.getType()));
         }
     }
+
+    public static PieceType getTypeByClass(Class<? extends AbstractPieceView> pieceViewClass) {
+        return typeToViewClassMapping.entrySet().stream()
+                .filter(e -> e.getValue().equals(pieceViewClass))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(String.format(CANNOT_FIND_PIECE_TYPE_FOR_FOR_CLASS, pieceViewClass)));
+    }
 }

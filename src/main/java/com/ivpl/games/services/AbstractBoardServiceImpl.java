@@ -1,6 +1,5 @@
 package com.ivpl.games.services;
 
-import com.ivpl.games.constants.Color;
 import com.ivpl.games.entity.BoardContainer;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.ui.AbstractPieceView;
@@ -19,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.ExceptionMessages.GAME_NOT_FOUND_BY_ID;
 
 @Service
@@ -61,36 +59,32 @@ public abstract class AbstractBoardServiceImpl implements BoardService {
                     .filter(p -> p.getPosition() != null && game.getTurn().equals(p.getColor()))
                     .forEach(p -> {
                         p.calculatePossibleSteps(cells, true);
-                        addPieceListener(game, cells, p, boardView);
+                        addPieceListener(game, cells, p, boardView, p);
         });
         return new BoardContainer(board, pieces, cells);
     }
 
-    protected void addPieceListener(Game game, Map<CellKey, Cell> cells, AbstractPieceView p, AbstractBoardView boardView) {
+    protected void addPieceListener(Game game, Map<CellKey, Cell> cells, AbstractPieceView p, AbstractBoardView boardView, AbstractPieceView piece) {
         p.setOnClickListener(p.addClickListener(e -> {
-            AtomicReference<AbstractPieceView> selectedPiece = boardView.getSelectedPiece();
-            if (!p.equals(selectedPiece.get())) {
-                if (selectedPiece.get() != null) {
-                    selectedPiece.get().getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                    selectedPiece.get().unselectPiece();
+            AtomicReference<AbstractPieceView> selectedPieceFromBoard = boardView.getSelectedPiece();
+            if (!p.equals(selectedPieceFromBoard.get())) {
+                if (selectedPieceFromBoard.get() != null) {
+                    selectedPieceFromBoard.get().getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
+                    selectedPieceFromBoard.get().unselectPiece();
                 }
 
                 p.getPossibleSteps().forEach(k -> {
                     Cell cell = cells.get(k);
                     cell.addSelectedStyle();
-                    addCellListener(game, cells, cell, boardView);
+                    addCellListener(game, cells, cell, piece);
                 });
-                selectedPiece.set(p);
+                selectedPieceFromBoard.set(p);
             } else {
                 p.getPossibleSteps().forEach(k -> cells.get(k).removeSelectedStyle());
-                selectedPiece.set(null);
+                selectedPieceFromBoard.set(null);
             }
         }));
     }
 
-    protected abstract void addCellListener(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractBoardView boardView);
-
-    protected boolean isBorderCell(CellKey cellKey, Color pieceColor) {
-        return WHITE.equals(pieceColor) ? cellKey.getY() == 1 : cellKey.getY() == 8;
-    }
+    protected abstract void addCellListener(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractPieceView selectedPiece);
 }

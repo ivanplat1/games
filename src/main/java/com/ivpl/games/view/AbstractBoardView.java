@@ -56,7 +56,7 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
     private final AtomicReference<AbstractPieceView> selectedPiece = new AtomicReference<>();
     protected final transient List<AbstractPieceView> pieces = new ArrayList<>();
     private VerticalLayout board;
-    private transient LinkedList<Step> steps;
+    protected transient LinkedList<Step> steps;
 
     protected AbstractBoardView(UIComponentsService uiComponentsService,
                                 BroadcasterService broadcasterService,
@@ -107,7 +107,7 @@ public abstract class AbstractBoardView extends VerticalLayout implements HasUrl
             reverseBoard();
     }
 
-    private void drawNewBoard() {
+    protected void drawNewBoard() {
         removeAll();
         BoardContainer boardContainer = boardService.reloadBoard(game.getId(), this);
         board = boardContainer.getBoardLayout();

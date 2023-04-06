@@ -5,6 +5,7 @@ import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.utils.CommonUtils;
 import com.vaadin.flow.component.html.Image;
 
 import java.util.*;
@@ -15,7 +16,7 @@ import static com.ivpl.games.constants.Constants.PIECE_IMAGE_ALT;
 
 public abstract class ChessPieceView extends AbstractPieceView {
 
-    private static final String IMAGE_PATH_STR = "images/chess/%s.png";
+    public static final String IMAGE_PATH_STR = "images/chess/%s.png";
 
     protected ChessPieceView(Long pieceId, Long dbId, Color color, PieceType type, Cell position) {
         super(pieceId, dbId, color, type, position);
@@ -23,7 +24,7 @@ public abstract class ChessPieceView extends AbstractPieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(String.format(IMAGE_PATH_STR, calculateImageName()), PIECE_IMAGE_ALT);
+        return new Image(String.format(IMAGE_PATH_STR, CommonUtils.calculateImageName(getColor(), getClass())), PIECE_IMAGE_ALT);
     }
 
     @Override

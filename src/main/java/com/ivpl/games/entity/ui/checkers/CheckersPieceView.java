@@ -5,6 +5,7 @@ import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.utils.CommonUtils;
 import com.vaadin.flow.component.html.Image;
 
 import java.util.*;
@@ -67,7 +68,7 @@ public abstract class CheckersPieceView extends AbstractPieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(String.format(IMAGE_PATH_STR, calculateImageName()), PIECE_IMAGE_ALT);
+        return new Image(String.format(IMAGE_PATH_STR, CommonUtils.calculateImageName(getColor(), getClass())), PIECE_IMAGE_ALT);
     }
 
     protected abstract LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);

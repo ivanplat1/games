@@ -7,7 +7,7 @@ import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
-import com.ivpl.games.entity.ui.chess.KingView;
+import com.ivpl.games.entity.ui.chess.*;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.services.broadcasting.BroadcasterService;
@@ -16,11 +16,9 @@ import com.ivpl.games.view.AbstractBoardView;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static com.ivpl.games.constants.ExceptionMessages.GAME_NOT_FOUND_BY_ID;
-import static com.ivpl.games.constants.ExceptionMessages.KING_NOT_FOUND;
+import static com.ivpl.games.constants.ExceptionMessages.*;
 
 @Service
 public class ChessBoardServiceImpl extends AbstractBoardServiceImpl implements BoardService {
@@ -42,36 +40,32 @@ public class ChessBoardServiceImpl extends AbstractBoardServiceImpl implements B
     }
 
     @Override
-    protected void addCellListener(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractBoardView boardView) {
+    protected void addCellListener(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractPieceView selectedPiece) {
         cell.clearListener();
-        AtomicReference<AbstractPieceView> selectedPiece = boardView.getSelectedPiece();
-        cell.setOnClickListener(cell.addClickListener(event -> {
-            AbstractPieceView piece = selectedPiece.get();
-            if (PieceType.KING.equals(piece.getType())
-                    && isPossibleStepCastlingStep(piece, cell)) {
-                // move king
-                gameService.saveStep(game.getId(), cell.getKey(),
-                        piece, false);
-                // move rook
-                int kingX = piece.getPosition().getKey().getX();
-                int kingY = piece.getPosition().getKey().getY();
-                AbstractPieceView rook = cells.get(new CellKey(kingX - cell.getKey().getX() > 0 ? 1 : 8, kingY)).getPiece();
-                int x = rook.getPosition().getKey().getX();
-                gameService.saveStep(game.getId(), new CellKey(x == 1 ? 4 : 6, kingY),
-                        rook, true);
-            } else {
-                Optional.ofNullable(selectedPiece.get().getPiecesToBeEaten().get(cell.getKey()))
-                        .ifPresent(f -> {
-                            f.toDie();
-                            gameService.killPiece(f.getDbId());
-                        });
-                piece.placeAt(cell);
-                gameService.saveStep(game.getId(), cell.getKey(),
-                        selectedPiece.get(), true);
-            }
-            checkIsGameOver(game, cells);
-            broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
-        }));
+        if (PieceType.PAWN.equals(selectedPiece.getType())
+                && CommonUtils.isBorderCell(cell.getKey(), selectedPiece.getColor())) {
+            addCellListenerWithPieceSelector(game, cells, cell, selectedPiece);
+        } else {
+            cell.setOnClickListener(cell.addClickListener(event -> {
+                if (PieceType.KING.equals(selectedPiece.getType())
+                        && isPossibleStepCastlingStep(selectedPiece, cell)) {
+                    // move king
+                    gameService.saveStep(game.getId(), cell.getKey(),
+                            selectedPiece, false);
+                    // move rook
+                    int kingX = selectedPiece.getPosition().getKey().getX();
+                    int kingY = selectedPiece.getPosition().getKey().getY();
+                    AbstractPieceView rook = cells.get(new CellKey(kingX - cell.getKey().getX() > 0 ? 1 : 8, kingY)).getPiece();
+                    int x = rook.getPosition().getKey().getX();
+                    gameService.saveStep(game.getId(), new CellKey(x == 1 ? 4 : 6, kingY),
+                            rook, true);
+                } else {
+                    executeDefaultStepLogic(game, cell, selectedPiece);
+                }
+                checkIsGameOver(game, cells);
+                broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
+            }));
+        }
     }
 
     private boolean isPossibleStepCastlingStep(AbstractPieceView kingView, Cell cell) {
@@ -103,5 +97,27 @@ public class ChessBoardServiceImpl extends AbstractBoardServiceImpl implements B
                 .filter(p -> PieceType.KING.equals(p.getType()) && color.equals(p.getColor()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(KING_NOT_FOUND));
+    }
+
+    private void addCellListenerWithPieceSelector(Game game, Map<CellKey, Cell> cells, Cell cell, AbstractPieceView selectedPiece) {
+        cell.setContextMenu(uiComponentsService.getPieceSelectorContextMenu(cell, selectedPiece.getColor(),
+                e -> {
+            executeDefaultStepLogic(game, cell, selectedPiece);
+            String miId = e.getSource().getId().orElseThrow(() -> new IllegalArgumentException(ID_OF_MENU_ITEM_IS_NULL));
+            gameService.mutatePiece(selectedPiece.getDbId(), PieceType.valueOf(miId));
+            checkIsGameOver(game, cells); //TODO not working
+            broadcasterService.getBroadcaster(game.getId()).broadcast(this.hashCode());
+        }));
+    }
+
+    private void executeDefaultStepLogic(Game game, Cell cell,  AbstractPieceView selectedPiece) {
+        Optional.ofNullable(selectedPiece.getPiecesToBeEaten().get(cell.getKey()))
+                .ifPresent(f -> {
+                    f.toDie();
+                    gameService.killPiece(f.getDbId());
+                });
+        selectedPiece.placeAt(cell);
+        gameService.saveStep(game.getId(), cell.getKey(),
+                selectedPiece, true);
     }
 }
