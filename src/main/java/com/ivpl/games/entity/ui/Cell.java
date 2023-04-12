@@ -2,6 +2,7 @@ package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
 import com.ivpl.games.constants.Styles;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 
 import com.vaadin.flow.shared.Registration;
@@ -25,6 +26,8 @@ public class Cell extends Div {
     private AbstractPieceView piece = null;
     @Setter
     private Registration onClickListener;
+    @Setter
+    private ContextMenu contextMenu;
 
     @NonNull
     public Cell(int x, int y, Color color) {
@@ -55,7 +58,14 @@ public class Cell extends Div {
 
     public void removeSelectedStyle() {
         getStyle().remove(Styles.FILTER_PROP);
+        clearListener();
+    }
+
+    public void clearListener() {
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
+        onClickListener = null;
+        Optional.ofNullable(contextMenu).ifPresent(cm -> cm.setTarget(null));
+        contextMenu = null;
     }
 
     public boolean isOccupied() {

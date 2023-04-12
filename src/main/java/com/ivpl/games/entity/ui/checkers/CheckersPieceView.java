@@ -5,9 +5,11 @@ import com.ivpl.games.constants.PieceType;
 import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.entity.ui.Cell;
 import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.utils.CommonUtils;
 import com.vaadin.flow.component.html.Image;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.ivpl.games.constants.Color.WHITE;
 import static com.ivpl.games.constants.Constants.PIECE_IMAGE_ALT;
@@ -20,7 +22,7 @@ public abstract class CheckersPieceView extends AbstractPieceView {
         super(pieceId, dbId, color, type, position);
     }
 
-    public void calculatePossibleSteps(Map<CellKey, Cell> cells) {
+    public void calculatePossibleSteps(Map<CellKey, Cell> cells, boolean checkValidationNeeded) {
         possibleSteps.clear();
         piecesToBeEaten.clear();
         Set<CellKey> eatingCells = new HashSet<>();
@@ -29,9 +31,9 @@ public abstract class CheckersPieceView extends AbstractPieceView {
         int currentY = currentPosition.getY();
         getDirections().values()
                 .forEach(d -> {
-                            shouldStopCalculationForDirection = false;
+                            AtomicBoolean shouldStopCalculationForDirection = new AtomicBoolean(false);
                             d.stream()
-                                    .takeWhile(e -> !shouldStopCalculationForDirection)
+                                    .takeWhile(e -> !shouldStopCalculationForDirection.get())
                                     .map(dc -> new CellKey(currentX+dc[1], currentY+(WHITE.equals(color) ? dc[0]*-1 : dc[0])))
                                     .filter(c -> c.inRange(1, 8))
                                     .map(k -> Optional.ofNullable(cells.get(k)))
@@ -41,12 +43,12 @@ public abstract class CheckersPieceView extends AbstractPieceView {
                                         if (targetCell.isOccupied()) {
                                             LinkedList<Cell> cellsBehindTarget = getCellsBehindTargetCell(currentPosition, targetCell.getKey(), cells);
                                             if (cellsBehindTarget.isEmpty() || cellsBehindTarget.getFirst().isOccupied()) {
-                                                shouldStopCalculationForDirection = true;
+                                                shouldStopCalculationForDirection.set(true);
                                             } else {
                                                 cellsBehindTarget.forEach(c -> {
                                                     piecesToBeEaten.put(c.getKey(), targetCell.getPiece());
                                                     eatingCells.add(c.getKey());
-                                                    shouldStopCalculationForDirection = true;
+                                                    shouldStopCalculationForDirection.set(true);
                                                 });
                                             }
                                         } else if ((WHITE.equals(color)
@@ -66,7 +68,7 @@ public abstract class CheckersPieceView extends AbstractPieceView {
 
     @Override
     protected Image getImage() {
-        return new Image(String.format(IMAGE_PATH_STR, calculateImageName()), PIECE_IMAGE_ALT);
+        return new Image(String.format(IMAGE_PATH_STR, CommonUtils.calculateImageName(getColor(), getClass())), PIECE_IMAGE_ALT);
     }
 
     protected abstract LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells);

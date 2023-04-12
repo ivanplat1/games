@@ -1,9 +1,12 @@
 package com.ivpl.games.services;
 
-import com.ivpl.games.constants.Color;
-import com.ivpl.games.constants.ExceptionMessages;
-import com.ivpl.games.constants.GameType;
+import com.ivpl.games.constants.*;
+import com.ivpl.games.converter.PieceToPieceViewConverter;
+import com.ivpl.games.entity.ui.Cell;
+import com.ivpl.games.entity.ui.CellKey;
+import com.ivpl.games.entity.ui.chess.*;
 import com.ivpl.games.security.SecurityService;
+import com.ivpl.games.utils.CommonUtils;
 import com.ivpl.games.view.MainPage;
 import com.vaadin.flow.component.ClickEvent;
 import com.vaadin.flow.component.ComponentEventListener;
@@ -11,6 +14,8 @@ import com.vaadin.flow.component.Text;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
+import com.vaadin.flow.component.contextmenu.MenuItem;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.Image;
@@ -25,10 +30,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
 import java.util.Optional;
 
 import static com.ivpl.games.constants.Color.*;
 import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.ExceptionMessages.COLOR_WAS_NOT_RECOGNIZED;
 import static com.ivpl.games.constants.Styles.*;
 
 @Component
@@ -66,13 +73,13 @@ public class UIComponentsService {
         return new Button(LOGOUT_STR, new Icon(VaadinIcon.EXIT_O), click -> securityService.logout());
     }
 
-    public static Div getTurnIndicator(Color color) {
+    public Div getTurnIndicator(Color color) {
         Div indicator = getFixedBoxWithBorder();
-        indicator.setId(color.name());
         switch(color) {
             case BLACK -> indicator.getStyle().set(BACKGROUND, BLACK_CELL_COLOR);
             case WHITE -> indicator.getStyle().set(BACKGROUND, WHITE_CELL_COLOR);
             case RANDOM -> indicator.getStyle().set(BACKGROUND, RANDOM_SELECTOR_BACKGROUND);
+            default -> throw new IllegalArgumentException(COLOR_WAS_NOT_RECOGNIZED);
         }
         indicator.getStyle().set(BORDER_STYLE, "solid");
         return indicator;
@@ -112,7 +119,7 @@ public class UIComponentsService {
                 dialog.close();
                 gameService.newGame(securityService.getAuthenticatedUser(), color, type);
             } catch (AuthenticationException authenticationException) {
-                log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR);
+                log.error(ExceptionMessages.AUTHORIZATION_ERROR);
             }
         };
     }
@@ -149,12 +156,15 @@ public class UIComponentsService {
     private HorizontalLayout getColorSelectorLayout() {
         HorizontalLayout layout = new HorizontalLayout();
         Div random = getTurnIndicator(RANDOM);
+        random.setId(RANDOM.name());
         Icon ico = new Icon(VaadinIcon.QUESTION);
         random.add(ico);
         random.addClickListener(colorSelectorDialogListener(layout));
         Div black = getTurnIndicator(BLACK);
+        black.setId(BLACK.name());
         black.addClickListener(colorSelectorDialogListener(layout));
         Div white = getTurnIndicator(WHITE);
+        white.setId(WHITE.name());
         white.addClickListener(colorSelectorDialogListener(layout));
         layout.add(white, random, black);
         return layout;
@@ -180,5 +190,44 @@ public class UIComponentsService {
         box.setHeight("50px");
         box.setWidth("50px");
         return box;
+    }
+
+    public VerticalLayout getChessBoard(Map<CellKey, Cell> cells) {
+        cells.clear();
+        VerticalLayout board = new VerticalLayout();
+        board.setSpacing(false);
+        board.addClassName(Styles.CHESS_BOARD_WHITES_STYLE);
+        board.setPadding(false);
+        HorizontalLayout line;
+
+        for (int y = 1; y < 9; ++y) {
+            line = new HorizontalLayout();
+            line.setSpacing(false);
+
+            for (int x = 1; x < 9; ++x) {
+                Cell cell = new Cell(x, y, (x+y) % 2 == 0 ? WHITE : BLACK);
+                line.add(cell);
+                cells.put(cell.getKey(), cell);
+            }
+            board.add(line);
+        }
+        return board;
+    }
+
+    public ContextMenu getPieceSelectorContextMenu(Cell cell, Color color, ComponentEventListener<ClickEvent<MenuItem>> action) {
+        ContextMenu menu = new ContextMenu();
+        addMenuItemForPieceSelector(menu, color, QueenView.class, action);
+        addMenuItemForPieceSelector(menu, color, HorseView.class, action);
+        addMenuItemForPieceSelector(menu, color, RookView.class, action);
+        addMenuItemForPieceSelector(menu, color, BishopView.class, action);
+        menu.setOpenOnClick(true);
+        menu.setTarget(cell);
+        return menu;
+    }
+
+    public void addMenuItemForPieceSelector(ContextMenu menu, Color pieceColor, Class<? extends ChessPieceView> clazz, ComponentEventListener<ClickEvent<MenuItem>> action) {
+        Div div = getTurnIndicator(CommonUtils.getOppositeColor(pieceColor));
+        div.add(new Image(String.format(ChessPieceView.IMAGE_PATH_STR, CommonUtils.calculateImageName(pieceColor, clazz)), PIECE_IMAGE_ALT));
+        menu.addItem(div, action).setId(PieceToPieceViewConverter.getTypeByClass(clazz).name());
     }
 }

@@ -13,7 +13,6 @@ import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.PieceRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.utils.CommonUtils;
-import com.ivpl.games.view.ChessBoard;
 import com.vaadin.flow.component.UI;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,27 +53,25 @@ public class GameService {
         game.setColorPlayer2(CommonUtils.getOppositeColor(selectedColor));
         gameRepository.saveAndFlush(game);
         createPieces(game.getId(), gameType);
-        UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(gameType), Long.toString(game.getId()));
     }
 
     public void joinGame(Game game, User user) {
         game.setPlayer2Id(user.getId());
         game.setStatus(GameStatus.IN_PROGRESS);
         gameRepository.saveAndFlush(game);
-        UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId()));
     }
 
     public void saveStep(Long gameId,
-                         Color playerColor,
                          CellKey to,
-                         Long pieceId,
-                         Long pieceDBId,
+                         AbstractPieceView pieceView,
                          boolean changeColor) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
-        Piece piece = pieceRepository.findPieceById(pieceDBId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceDBId)));
-        Step step = new Step(gameId, increaseStepCount(game), playerColor, new CellKey(piece.getPosition()), to, pieceId);
+        Piece piece = pieceRepository.findPieceById(pieceView.getDbId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceView.getDbId())));
+        Step step = new Step(gameId, increaseStepCount(game), piece.getColor(), new CellKey(piece.getPosition()), to, pieceView.getPieceId());
         stepRepository.saveAndFlush(step);
         piece.setPosition(to.getAsArray());
         pieceRepository.saveAndFlush(piece);

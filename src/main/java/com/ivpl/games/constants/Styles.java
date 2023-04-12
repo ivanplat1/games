@@ -21,4 +21,6 @@ public class Styles {
     public static final String BADGE_ORANGE_STYLE = "badge-orange";
     public static final String BADGE_GREEN_STYLE = "badge-green";
     public static final String BADGE_ROSE_STYLE = "badge-rose";
+
+    private Styles() {}
 }

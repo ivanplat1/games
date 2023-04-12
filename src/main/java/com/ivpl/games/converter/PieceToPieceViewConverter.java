@@ -13,7 +13,7 @@ import java.util.AbstractMap;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.ivpl.games.constants.ExceptionMessages.CANNOT_FIND_VIEW_FOR_PIECE;
+import static com.ivpl.games.constants.ExceptionMessages.*;
 import static com.ivpl.games.constants.PieceType.*;
 
 @Service
@@ -33,7 +33,8 @@ public class PieceToPieceViewConverter {
     public AbstractPieceView convert(Piece source, Map<CellKey, Cell> cells) {
         try {
             Cell position = source.getPosition() != null
-                    ? Optional.ofNullable(cells.get(new CellKey(source.getPosition()))).orElseThrow()
+                    ? Optional.ofNullable(cells.get(new CellKey(source.getPosition())))
+                    .orElseThrow(() -> new IllegalArgumentException(String.format(POSITION_NOT_FOUND_FOR_PIECE, source.getId())))
                     : null;
             return typeToViewClassMapping.get(source.getType())
                     .getDeclaredConstructor(Long.class, Long.class, Color.class, PieceType.class, Cell.class)
@@ -42,5 +43,13 @@ public class PieceToPieceViewConverter {
         } catch (ReflectiveOperationException e) {
             throw new IllegalArgumentException(String.format(CANNOT_FIND_VIEW_FOR_PIECE, source.getType()));
         }
+    }
+
+    public static PieceType getTypeByClass(Class<? extends AbstractPieceView> pieceViewClass) {
+        return typeToViewClassMapping.entrySet().stream()
+                .filter(e -> e.getValue().equals(pieceViewClass))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(String.format(CANNOT_FIND_PIECE_TYPE_FOR_FOR_CLASS, pieceViewClass)));
     }
 }
