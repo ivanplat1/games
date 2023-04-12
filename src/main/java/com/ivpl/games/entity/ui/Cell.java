@@ -1,6 +1,8 @@
 package com.ivpl.games.entity.ui;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.Styles;
+import com.vaadin.flow.component.contextmenu.ContextMenu;
 import com.vaadin.flow.component.html.Div;
 
 import com.vaadin.flow.shared.Registration;
@@ -10,17 +12,22 @@ import lombok.Setter;
 
 import java.util.Optional;
 
-import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.Styles.BRIGHTNESS_DARK;
 
 
 @Getter
 public class Cell extends Div {
 
+    private static final String WHITE_CELL_STATUS = "white-cell";
+    private static final String BLACK_CELL_STATUS = "black-cell";
+
     private final CellKey key;
     private final Color color;
-    private PieceView piece = null;
+    private AbstractPieceView piece = null;
     @Setter
     private Registration onClickListener;
+    @Setter
+    private ContextMenu contextMenu;
 
     @NonNull
     public Cell(int x, int y, Color color) {
@@ -29,16 +36,13 @@ public class Cell extends Div {
         this.color = color;
 
         if (Color.WHITE.equals(color)) {
-            addClassName("white-cell");
+            addClassName(WHITE_CELL_STATUS);
         } else {
-            addClassName("black-cell");
+            addClassName(BLACK_CELL_STATUS);
         }
-
-        setHeight("75px");
-        setWidth("75px");
     }
 
-    public void setPiece(PieceView piece) {
+    public void setPiece(AbstractPieceView piece) {
         this.piece = piece;
         add(piece);
     }
@@ -49,12 +53,19 @@ public class Cell extends Div {
     }
 
     public void addSelectedStyle() {
-        getStyle().set(FILTER_PROP, "brightness(0.50)");
+        getStyle().set(Styles.FILTER_PROP, BRIGHTNESS_DARK);
     }
 
     public void removeSelectedStyle() {
-        getStyle().remove(FILTER_PROP);
+        getStyle().remove(Styles.FILTER_PROP);
+        clearListener();
+    }
+
+    public void clearListener() {
         Optional.ofNullable(onClickListener).ifPresent(Registration::remove);
+        onClickListener = null;
+        Optional.ofNullable(contextMenu).ifPresent(cm -> cm.setTarget(null));
+        contextMenu = null;
     }
 
     public boolean isOccupied() {

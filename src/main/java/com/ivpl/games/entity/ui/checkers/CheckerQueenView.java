@@ -1,31 +1,28 @@
-package com.ivpl.games.entity.ui;
+package com.ivpl.games.entity.ui.checkers;
 
 import com.ivpl.games.constants.Color;
+import com.ivpl.games.constants.PieceType;
+import com.ivpl.games.entity.ui.Cell;
+import com.ivpl.games.entity.ui.CellKey;
 import com.ivpl.games.utils.DirectionsForClassRepo;
-import com.vaadin.flow.component.html.Image;
 import lombok.NonNull;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.ivpl.games.constants.Color.WHITE;
-import static com.ivpl.games.constants.Constants.*;
 
-public class QueenView extends PieceView {
+public class CheckerQueenView extends CheckersPieceView {
 
-    public QueenView(Long id, Long dbId, Color color, Cell initPosition) {
-        super(id, dbId, color, initPosition);
-    }
-
-    @Override
-    protected Image getImage() {
-        return new Image(Color.WHITE.equals(getColor()) ? WHITE_QUEEN_IMG : BLACK_QUEEN_IMG, "queenImage");
+    public CheckerQueenView(Long id, Long dbId, Color color, PieceType type, Cell initPosition) {
+        super(id, dbId, color, type, initPosition);
     }
 
     @Override
     protected @NonNull LinkedList<Cell> getCellsBehindTargetCell(CellKey sourceKey, CellKey targetKey, Map<CellKey, Cell> cells) {
         return DirectionsForClassRepo
-                .getCertainDirectionForClass(getClass(), calculateDirectionKey(sourceKey, targetKey))
+                .getCertainDirectionForClass(getType(), calculateDirectionKey(sourceKey, targetKey))
                 .stream()
                 .map(dc -> new CellKey(
                         targetKey.getX()+dc[0],
@@ -39,7 +36,7 @@ public class QueenView extends PieceView {
 
     private String calculateDirectionKey(CellKey sourceKey, CellKey targetKey) {
         return Arrays.toString(new int[] {(targetKey.getX()-sourceKey.getX()) < 0 ? -1 : 1,
-                (targetKey.getY()-sourceKey.getY()) < 0 ? -1 : 1});
+                (targetKey.getY()-sourceKey.getY()) < 0 ? -1 : 1}).replace(StringUtils.SPACE, StringUtils.EMPTY);
     }
 
 }

@@ -8,12 +8,11 @@ import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.Piece;
 import com.ivpl.games.entity.jpa.Step;
 import com.ivpl.games.entity.jpa.User;
-import com.ivpl.games.entity.ui.PieceView;
+import com.ivpl.games.entity.ui.AbstractPieceView;
 import com.ivpl.games.repository.GameRepository;
 import com.ivpl.games.repository.PieceRepository;
 import com.ivpl.games.repository.StepRepository;
 import com.ivpl.games.utils.CommonUtils;
-import com.ivpl.games.view.ChessBoard;
 import com.vaadin.flow.component.UI;
 import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +25,7 @@ import static com.ivpl.games.constants.Color.*;
 import static com.ivpl.games.constants.ExceptionMessages.GAME_NOT_FOUND_BY_ID;
 import static com.ivpl.games.constants.ExceptionMessages.PIECE_NOT_FOUND_BY_ID;
 import static com.ivpl.games.constants.GameType.CHECKERS;
+import static com.ivpl.games.constants.GameType.CHESS;
 
 @Service
 public class GameService {
@@ -53,35 +53,33 @@ public class GameService {
         game.setColorPlayer2(CommonUtils.getOppositeColor(selectedColor));
         gameRepository.saveAndFlush(game);
         createPieces(game.getId(), gameType);
-        UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(gameType), Long.toString(game.getId()));
     }
 
     public void joinGame(Game game, User user) {
         game.setPlayer2Id(user.getId());
         game.setStatus(GameStatus.IN_PROGRESS);
         gameRepository.saveAndFlush(game);
-        UI.getCurrent().navigate(ChessBoard.class, Long.toString(game.getId()));
+        UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId()));
     }
 
     public void saveStep(Long gameId,
-                         Color playerColor,
-                         CellKey from,
                          CellKey to,
-                         Long pieceId,
+                         AbstractPieceView pieceView,
                          boolean changeColor) {
         Game game = gameRepository.findById(gameId)
                 .orElseThrow(() -> new IllegalArgumentException(String.format(GAME_NOT_FOUND_BY_ID, gameId)));
-        Step step = new Step(gameId, increaseStepCount(game), playerColor, from, to, pieceId);
+        Piece piece = pieceRepository.findPieceById(pieceView.getDbId())
+                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceView.getDbId())));
+        Step step = new Step(gameId, increaseStepCount(game), piece.getColor(), new CellKey(piece.getPosition()), to, pieceView.getPieceId());
         stepRepository.saveAndFlush(step);
-        Piece piece = pieceRepository.findPieceById(pieceId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format(PIECE_NOT_FOUND_BY_ID, pieceId)));
         piece.setPosition(to.getAsArray());
         pieceRepository.saveAndFlush(piece);
         if (changeColor) game.setTurn(CommonUtils.getOppositeColor(game.getTurn()));
         gameRepository.saveAndFlush(game);
     }
 
-    public List<PieceView> loadPieceViewsForGame(Long gameId, Map<CellKey, Cell> cells) {
+    public List<AbstractPieceView> loadPieceViewsForGame(Long gameId, Map<CellKey, Cell> cells) {
         return pieceRepository.findAllByGameId(gameId).stream()
                 .map(e -> pieceToPieceViewConverter.convert(e, cells))
                 .collect(Collectors.toList());
@@ -97,9 +95,16 @@ public class GameService {
         Map<Long, Integer[]> positions = new HashMap<>(
                 CHECKERS.equals(gameType)
                         ? PiecesInitPositions.checkersInitPositions
-                        : Collections.emptyMap());
-        positions.forEach((k, v) -> pieceRepository.save(
-                new Piece(gameId, k, PieceType.CHECKER, k > 12 ? WHITE : BLACK, v)));
+                        : PiecesInitPositions.chessInitPositions);
+
+        if (CHECKERS.equals(gameType)) {
+            positions.forEach((k, v) -> pieceRepository.save(
+                    new Piece(gameId, k, PieceType.CHECKER, v[1] > 4 ? WHITE : BLACK, v)));
+        } else if (CHESS.equals(gameType)) {
+            positions.forEach((k, v) -> pieceRepository.save(
+                    new Piece(gameId, k, PiecesInitPositions.idToTypeMapping.get(k), v[1] > 4 ? WHITE : BLACK, v)));
+        }
+
         pieceRepository.flush();
     }
 

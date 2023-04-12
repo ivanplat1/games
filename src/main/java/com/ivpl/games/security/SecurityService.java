@@ -12,6 +12,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.stereotype.Component;
 
+import static com.ivpl.games.constants.ExceptionMessages.PAGE_SHOULD_NOT_BE_AVAILABLE;
+
 @Component
 public class SecurityService {
 
@@ -24,7 +26,7 @@ public class SecurityService {
             return (User) context.getAuthentication().getPrincipal();
         }
         // Anonymous or no authentication.
-        throw new AuthenticationException("Page should not be available for unauthorized users.");
+        throw new AuthenticationException(PAGE_SHOULD_NOT_BE_AVAILABLE);
     }
 
     public void logout() {

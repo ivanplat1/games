@@ -1,56 +1,34 @@
 package com.ivpl.games.utils;
 
-import com.ivpl.games.entity.ui.CheckerView;
-import com.ivpl.games.entity.ui.PieceView;
-import com.ivpl.games.entity.ui.QueenView;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ivpl.games.constants.PieceType;
 import org.springframework.stereotype.Repository;
 
+import java.io.IOException;
 import java.util.*;
+
+import static com.ivpl.games.constants.ExceptionMessages.DIRECTIONS_ARE_NOT_IMPLEMENTED;
 
 @Repository
 public class DirectionsForClassRepo {
 
-    static Map<Class<?>, Map<String, List<int[]>>> repository  = new HashMap<>();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    static final HashMap<String, HashMap<String, LinkedList<int[]>>> repository = new HashMap<>();
 
-    public DirectionsForClassRepo() {
-        repository.put(CheckerView.class, calculateDirections(1));
-        repository.put(QueenView.class, calculateDirections(7));
+    public DirectionsForClassRepo() throws IOException {
+        repository.putAll(objectMapper.readValue(
+                getClass().getResourceAsStream("/static/pieceDirections.json"),
+                new TypeReference<>(){}));
     }
 
-    public static Map<String, List<int[]>> getDirectionsForClass(Class<? extends PieceView> clazz) {
-        return repository.get(clazz);
+    public static Map<String, LinkedList<int[]>> getDirectionsForType(PieceType type) {
+        return repository.get(type.name());
     }
 
-    public static List<int[]> getCertainDirectionForClass(Class<? extends PieceView> clazz, String key) {
-        return Optional.ofNullable(getDirectionsForClass(clazz)).map(ds -> ds.get(key))
+    public static List<int[]> getCertainDirectionForClass(PieceType type, String key) {
+        return Optional.ofNullable(getDirectionsForType(type)).map(ds -> ds.get(key))
                 .orElseThrow(() -> new NoSuchElementException(
-                        String.format("Directions are not implemented for Item child class %s", clazz.getName())));
-    }
-
-    private Map<String, List<int[]>> calculateDirections(int range) {
-        Map<String, List<int[]>> directions = new LinkedHashMap<>();
-        for (int i = 1; i < 5; i++) {
-            List<int[]> direction = new LinkedList<>();
-            for (int j = 1; j < range+1; j++) {
-                switch (i) {
-                    case 1:
-                        direction.add(new int[]{j, j});
-                        break;
-                    case 2:
-                        direction.add(new int[]{-j, -j});
-                        break;
-                    case 3:
-                        direction.add(new int[]{-j, j});
-                        break;
-                    case 4:
-                        direction.add(new int[]{j, -j});
-                        break;
-                    default:
-                        break;
-                }
-            }
-            directions.put(Arrays.toString(direction.get(0)), direction);
-        }
-        return directions;
+                        String.format(DIRECTIONS_ARE_NOT_IMPLEMENTED, type.name())));
     }
 }
