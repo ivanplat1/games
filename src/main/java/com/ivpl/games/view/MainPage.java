@@ -1,6 +1,5 @@
 package com.ivpl.games.view;
 
-import com.ivpl.games.constants.ExceptionMessages;
 import com.ivpl.games.entity.jpa.Game;
 import com.ivpl.games.entity.jpa.User;
 import com.ivpl.games.repository.GameRepository;
@@ -28,8 +27,7 @@ import com.vaadin.flow.function.SerializableBiConsumer;
 import com.vaadin.flow.router.Route;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.tomcat.websocket.AuthenticationException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AuthorizationServiceException;
 
 import java.text.SimpleDateFormat;
 import java.util.Collections;
@@ -38,18 +36,18 @@ import java.util.Optional;
 import java.util.Set;
 
 import static com.ivpl.games.constants.Constants.*;
+import static com.ivpl.games.constants.ExceptionMessages.AUTHORIZATION_ERROR;
 import static com.ivpl.games.constants.GameStatus.*;
 import static com.ivpl.games.constants.Styles.*;
 
 @Route("")
 public class MainPage extends VerticalLayout {
 
-    private final transient GameRepository gameRepository;
+    private transient GameRepository gameRepository;
     private final transient UserRepository userRepository;
     private final transient GameService gameService;
     private final transient SecurityService securityService;
     private final transient UIComponentsService uiComponentsService;
-    private static final Logger log = LoggerFactory.getLogger(MainPage.class);
 
     public MainPage(GameRepository gameRepository,
                     UserRepository userRepository,
@@ -128,8 +126,12 @@ public class MainPage extends VerticalLayout {
         }
     };
 
-    private User getCurrentUser() throws AuthenticationException {
-        return securityService.getAuthenticatedUser();
+    private User getCurrentUser() {
+        try {
+            return securityService.getAuthenticatedUser();
+        } catch (AuthenticationException e) {
+            throw new AuthorizationServiceException(AUTHORIZATION_ERROR, e);
+        }
     }
 
     private Renderer<Game> createUsersRenderer() {
@@ -152,37 +154,27 @@ public class MainPage extends VerticalLayout {
 
     private final SerializableBiConsumer<Button, Game> actionComponentUpdater = (
             button, game) -> {
-        if (IN_PROGRESS.equals(game.getStatus())) {
-            try {
-                button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
-                if (getCurrentUser().getId().equals(game.getPlayer1Id())
-                        || getCurrentUser().getId().equals(game.getPlayer2Id())) {
-                    button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
-                    button.setIcon(new Icon(VaadinIcon.ARROW_FORWARD));
-                    button.setTooltipText("Get Back to Game");
-                } else {
-                    button.setIcon(new Icon(VaadinIcon.EYE));
-                    button.setTooltipText("Spectate");
-                }
-                button.addClickListener(
-                        e -> UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId())));
-            } catch (AuthenticationException e) {
-                e.printStackTrace();
-            }
+        button.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
+        if (getCurrentUser().getId().equals(game.getPlayer1Id())
+                || getCurrentUser().getId().equals(game.getPlayer2Id())) {
+            button.addThemeVariants(ButtonVariant.LUMO_SUCCESS);
+            button.setIcon(new Icon(VaadinIcon.ARROW_FORWARD));
+            button.setTooltipText("Get Back to Game");
+        } else if (IN_PROGRESS.equals(game.getStatus())) {
+            button.setIcon(new Icon(VaadinIcon.EYE));
+            button.setTooltipText("Spectate");
         } else if (WAITING_FOR_OPPONENT.equals(game.getStatus())) {
             button.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
             button.setIcon(new Icon(VaadinIcon.SWORD));
             button.setTooltipText("Fight");
-            button.addClickListener(e -> {
-                try {
-                    getGameService().joinGame(game, getCurrentUser());
-                } catch (AuthenticationException ex) {
-                    log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR, ex);
-                }
-            });
+            button.addClickListener(e -> gameRepository.findById(game.getId())
+                        .filter(g -> g.getPlayer1Id() == null || g.getPlayer2Id() == null)
+                        .ifPresent(g -> getGameService().joinGame(g, getCurrentUser())));
         } else {
             button.setVisible(false);
         }
+        button.addClickListener(
+                e -> UI.getCurrent().navigate(CommonUtils.getViewForGameType(game.getType()), Long.toString(game.getId())));
     };
 
     private ComponentRenderer<Button, Game> createActionComponentRenderer() {

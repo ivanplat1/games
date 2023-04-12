@@ -119,7 +119,7 @@ public class UIComponentsService {
                 dialog.close();
                 gameService.newGame(securityService.getAuthenticatedUser(), color, type);
             } catch (AuthenticationException authenticationException) {
-                log.error(ExceptionMessages.AUTHORIZATION_ERROR_ERROR);
+                log.error(ExceptionMessages.AUTHORIZATION_ERROR);
             }
         };
     }
