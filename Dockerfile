@@ -4,5 +4,8 @@ COPY .mvn/ .mvn
 COPY mvnw pom.xml ./
 RUN ./mvnw dependency:resolve
 COPY src ./src
+COPY frontend ./frontend
+COPY package-lock.json ./
+COPY package.json ./
 CMD ["./mvnw", "spring-boot:run"]
 EXPOSE 8080
