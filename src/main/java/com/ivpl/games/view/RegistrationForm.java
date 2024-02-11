@@ -17,6 +17,7 @@ public class RegistrationForm extends FormLayout {
     private final H3 title;
 
     private final TextField username;
+    private final TextField nick;
 
     private final PasswordField password;
     private final PasswordField passwordConfirm;
@@ -30,6 +31,7 @@ public class RegistrationForm extends FormLayout {
 
         title = new H3("Signup form");
         username = new TextField("Username");
+        nick = new TextField("Nick");
 
         password = new PasswordField("Password");
         passwordConfirm = new PasswordField("Confirm password");
@@ -44,7 +46,7 @@ public class RegistrationForm extends FormLayout {
         Button loginButton = new Button("Go to Login", e-> UI.getCurrent().navigate(LoginView.class));
         loginButton.addThemeVariants(ButtonVariant.LUMO_CONTRAST);
 
-        add(title, username, password,
+        add(title, username, nick, password,
                 passwordConfirm, errorMessageField,
                 submitButton, loginButton);
 
@@ -60,7 +62,6 @@ public class RegistrationForm extends FormLayout {
 
         // These components always take full width
         setColspan(title, 2);
-        setColspan(username, 2);
         setColspan(errorMessageField, 2);
         setColspan(submitButton, 2);
     }
